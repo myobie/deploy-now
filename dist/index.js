@@ -899,7 +899,7 @@ const { readFile } = __webpack_require__(747).promises
 
     const clientOptions = { path, token }
 
-    const url = await previewURL(path, { token })
+    const url = await previewURL(clientOptions)
 
     const deploymentOptions = {
       build: {

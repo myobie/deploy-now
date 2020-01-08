@@ -29,4 +29,7 @@ $ yarn install
 
 # and then before pushing, rebuild dist/index.js
 $ yarn package
+
+# or install the git pre-commit hook which will package for you
+$ cp pre-commit.sample .git/hooks/pre-commit
 ```
