@@ -121,7 +121,8 @@ async function deploy (clientOptions = {}) {
 
       console.debug({ regions: deployment.regions, url: deployment.url, status: deployment.status })
       console.debug('TODO: post a comment here')
-      commentID = await postComment(`🚀 started deployment for ${_previewURL}`)
+      const resp = await postComment(`🚀 started deployment for ${_previewURL}`)
+      commentID = resp.id
       continue
     }
 
