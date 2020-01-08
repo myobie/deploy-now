@@ -31,6 +31,7 @@ const { readFile } = require('fs').promises
 
 async function previewURL (path, clientOptions = {}) {
   const ref = github.context.ref
+  console.debug('ref', ref)
   // the first two segments are not the branch
   const branch = ref.split('/').slice(2).join('-').toLowerCase()
 
@@ -68,7 +69,7 @@ async function deploy (path, clientOptions = {}, deploymentOptions = {}) {
   clientOptions.force = true
 
   for await (const event of createDeployment(clientOptions, deploymentOptions)) {
-    console.debug(event.type)
+    console.debug('event', event.type)
 
     if (event.type === 'build-state-changed') {
       console.debug(event.payload.readyState, {
