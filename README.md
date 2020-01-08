@@ -3,9 +3,8 @@
 ## Usage
 
 ```yml
-name: now
+name: deploy now
 on:
-  pull_request:
   push:
 
 jobs:
@@ -13,11 +12,12 @@ jobs:
     name: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Checking out the code
+      - name: checkout
         uses: actions/checkout@v1
-      - name: deploy now
-        uses: myobie/action-deploy-now@master
+      - name: now
+        uses: myobie/deploy-now@master
         with:
+          github_token: ${{ github.token }}
           zeit_token: ${{ secrets.ZEIT_TOKEN }}
           prod: ${{ github.ref == 'refs/heads/master' }}
 ```

@@ -890,9 +890,8 @@ const octokit = new github.GitHub(core.getInput('github_token', { required: true
 
 ;(async () => {
   try {
-    if (github.context.eventName !== 'push' &&
-      !(github.context.eventName === 'pull_request' && github.context.payload.action === 'synchronize')) {
-      core.setFailed('deploy-now only deploys to now for pushes or pull_request synchronizes')
+    if (github.context.eventName !== 'push') {
+      core.setFailed('deploy-now only deploys to now for pushes')
       return
     }
 
@@ -912,13 +911,9 @@ const octokit = new github.GitHub(core.getInput('github_token', { required: true
 function getSHA () { return github.context.payload.after }
 
 function getBranch () {
-  if (github.context.payload.pull_request) {
-    return github.context.payload.pull_request.head.ref
-  } else {
-    const ref = github.context.ref
-    // the first two segments are not the branch
-    return ref.split('/').slice(2).join('-').toLowerCase()
-  }
+  const ref = github.context.ref
+  // the first two segments are not the branch
+  return ref.split('/').slice(2).join('-').toLowerCase()
 }
 
 async function previewURL (options = {}) {
