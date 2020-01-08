@@ -6,6 +6,12 @@ const { readFile } = require('fs').promises
 
 ;(async () => {
   try {
+    if (github.context.eventName !== 'push' ||
+      !(github.context.eventName === 'pull_request' && github.context.payload.action === 'synchronize')) {
+      core.setFailed('deploy-now only deploys for pushes or pull_request synchronizes')
+      return
+    }
+
     const path = process.cwd()
     const token = core.getInput('zeit_token', { required: true })
 
