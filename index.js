@@ -5,8 +5,9 @@ const { createDeployment } = require('now-client')
 ;(async () => {
   try {
     const token = core.getInput('zeit_token', { required: true })
+    const path = process.cwd()
 
-    const deployment = await deploy('.', { token })
+    const deployment = await deploy(path, { token })
 
     console.debug('deployment', deployment)
     console.log('deployment', deployment)
