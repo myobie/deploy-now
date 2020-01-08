@@ -2,14 +2,19 @@
   "name": "deploy-now",
   "version": "1.0.0",
   "description": "Deploy to zeit's now on push",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": "https://github.com/myobie/action-deploy-now",
   "author": "Nathan Herald <me@nathanherald.com>",
   "license": "MIT",
+  "scripts": {
+    "package": "ncc build index.js -o dist"
+  },
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@actions/github": "^2.0.0",
-    "now": "^16.7.1",
     "now-client": "^6.0.1"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.21.0"
   }
 }

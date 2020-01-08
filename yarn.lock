@@ -138,6 +138,11 @@
     agentkeepalive "3.4.1"
     debug "3.1.0"
 
+"@zeit/ncc@^0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@zeit/ncc/-/ncc-0.21.0.tgz#9516fc44ca81614c5b582d6e88542fdf37c401b6"
+  integrity sha512-RUMdvVK/w78oo+yBjruZltt0kJXYar2un/1bYQ2LuHG7GmFVm+QjxzEmySwREctaJdEnBvlMdUNWd9hXHxEI3g==
+
 agentkeepalive@3.4.1:
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/agentkeepalive/-/agentkeepalive-3.4.1.tgz#aa95aebc3a749bca5ed53e3880a09f5235b48f0c"
@@ -378,11 +383,6 @@ now-client@^6.0.1:
     querystring "^0.2.0"
     recursive-readdir "2.2.2"
     sleep-promise "8.0.1"
-
-now@^16.7.1:
-  version "16.7.1"
-  resolved "https://registry.yarnpkg.com/now/-/now-16.7.1.tgz#b936ee398588849d0374bb76196e43b8cbe14738"
-  integrity sha512-iAf6eUaVXc2phDUcM2kYCevhSmk10DRWEraRAUstwUChx14DJRB1Kb65M65Bk13qBXkHIjdfTAH2dR4s1y64+w==
 
 npm-run-path@^2.0.0:
   version "2.0.2"
