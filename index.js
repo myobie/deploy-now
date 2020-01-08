@@ -6,6 +6,8 @@ const { readFile } = require('fs').promises
 
 ;(async () => {
   try {
+    console.debug('event payload', github.context.payload)
+
     const token = core.getInput('zeit_token', { required: true })
     const path = process.cwd()
 

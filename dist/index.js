@@ -888,6 +888,8 @@ const { readFile } = __webpack_require__(747).promises
 
 ;(async () => {
   try {
+    console.debug('event payload', github.context.payload)
+
     const token = core.getInput('zeit_token', { required: true })
     const path = process.cwd()
 
