@@ -73,34 +73,37 @@ async function previewURL (options = {}) {
 }
 
 async function postComment (body) {
-  if (github.context.eventName === 'pull_request') {
-    return octokit.issues.createComment({
-      owner: github.context.issue.owner,
-      repo: github.context.issue.repo,
-      issue_number: github.context.issue.number,
-      body
-    })
-  } else {
-    return octokit.repos.createCommitComment({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      commit_sha: getSHA(),
-      body
-    })
-  }
+  return octokit.repos.createCommitComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    commit_sha: getSHA(),
+    body
+  })
+}
+
+async function updateComment (commentID, body) {
+  return octokit.repos.updateCommitComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    comment_id: commentID,
+    body
+  })
 }
 
 async function deploy (clientOptions = {}) {
   let deployment
   let error
+  let commentID
 
   clientOptions.debug = true
   clientOptions.force = true
 
+  const _previewURL = await previewURL(clientOptions)
+
   const deploymentOptions = {
     build: {
       env: {
-        PREVIEW_URL: await previewURL(clientOptions)
+        PREVIEW_URL: previewURL
       }
     }
   }
@@ -123,13 +126,13 @@ async function deploy (clientOptions = {}) {
 
       console.debug({ regions: deployment.regions, url: deployment.url, status: deployment.status })
       console.debug('TODO: post a comment here')
-      postComment(`🚀 created deployment for ${deploymentOptions.build.env.PREVIEW_URL}`.trim())
+      commentID = await postComment(`🚀 started deployment for ${_previewURL}`)
       continue
     }
 
     if (event.type === 'ready') {
       console.debug({ alias: event.payload.alias, public: event.payload.public })
-      console.debug('TODO: post a comment here')
+      await updateComment(commentID, `✅ completed deployment for ${_previewURL}`)
       continue
     }
 
@@ -141,6 +144,7 @@ async function deploy (clientOptions = {}) {
     if (event.type === 'error') {
       console.error(event.payload)
       error = event.payload
+      await updateComment(commentID, `❌ deployment failed for ${_previewURL}`)
       break
     }
   }
