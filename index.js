@@ -4,7 +4,7 @@ const { createDeployment } = require('now-client')
 const { readFile } = require('fs').promises
 // const { fetch } = require('now-client/utils')
 
-const octokit = new github.GitHub(core.getInput('GITHUB_TOKEN', { required: true }))
+const octokit = new github.GitHub(core.getInput('github_token', { required: true }))
 
 ;(async () => {
   try {

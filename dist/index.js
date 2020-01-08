@@ -886,7 +886,7 @@ const { createDeployment } = __webpack_require__(477)
 const { readFile } = __webpack_require__(747).promises
 // const { fetch } = require('now-client/utils')
 
-const octokit = new github.GitHub(core.getInput('GITHUB_TOKEN', { required: true }))
+const octokit = new github.GitHub(core.getInput('github_token', { required: true }))
 
 ;(async () => {
   try {
