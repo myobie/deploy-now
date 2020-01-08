@@ -6,12 +6,10 @@ const { readFile } = require('fs').promises
 
 ;(async () => {
   try {
-    console.debug('event payload', github.context.payload)
-
-    const token = core.getInput('zeit_token', { required: true })
     const path = process.cwd()
+    const token = core.getInput('zeit_token', { required: true })
 
-    const clientOptions = { token }
+    const clientOptions = { path, token }
 
     const url = await previewURL(path, { token })
 
@@ -23,7 +21,7 @@ const { readFile } = require('fs').promises
       }
     }
 
-    const deployment = await deploy(path, clientOptions, deploymentOptions)
+    const deployment = await deploy(clientOptions, deploymentOptions)
 
     console.debug('deployment', deployment)
   } catch (error) {
@@ -31,16 +29,24 @@ const { readFile } = require('fs').promises
   }
 })()
 
-async function previewURL (path, clientOptions = {}) {
-  const ref = github.context.ref
-  console.debug('ref', ref)
-  // the first two segments are not the branch
-  const branch = ref.split('/').slice(2).join('-').toLowerCase()
+function getBranch () {
+  if (github.context.payload.pull_request) {
+    return github.context.payload.pull_request.head.ref
+  } else {
+    const ref = github.context.ref
+    // the first two segments are not the branch
+    return ref.split('/').slice(2).join('-').toLowerCase()
+  }
+}
+
+async function previewURL (options = {}) {
+  const branch = getBranch()
+  console.debug('branch', branch)
 
   let nowContent
 
   try {
-    nowContent = await readFile(path + '/now.json', 'utf8')
+    nowContent = await readFile(options.path + '/now.json', 'utf8')
   } catch (e) {
     throw new Error('cannot find a now.json file, please refer to https://github.com/myobie/deploy-now#README')
   }
@@ -53,7 +59,11 @@ async function previewURL (path, clientOptions = {}) {
     throw new Error('missing name: key in now.json – please include the project name in now.json')
   }
 
+  console.debug('now project', project)
+
   const scope = nowJSON.scope || 'myobie' // TOOD: replace which whoami
+
+  console.debug('now scope', scope)
 
   const url = `https://${project}-git-${branch}.${scope}.now.sh`
 
@@ -62,11 +72,10 @@ async function previewURL (path, clientOptions = {}) {
   return url
 }
 
-async function deploy (path, clientOptions = {}, deploymentOptions = {}) {
+async function deploy (clientOptions = {}, deploymentOptions = {}) {
   let deployment
   let error
 
-  clientOptions.path = path
   clientOptions.debug = true
   clientOptions.force = true
 
