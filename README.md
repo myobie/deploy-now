@@ -13,10 +13,6 @@ jobs:
     name: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Installing node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
       - name: Checking out the code
         uses: actions/checkout@v1
       - name: deploy now
