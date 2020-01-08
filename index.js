@@ -76,19 +76,9 @@ async function postComment (body) {
   })
 }
 
-async function updateComment (commentID, body) {
-  return octokit.repos.updateCommitComment({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    comment_id: commentID,
-    body
-  })
-}
-
 async function deploy (clientOptions = {}) {
   let deployment
   let error
-  let commentID
 
   clientOptions.debug = true
   clientOptions.force = true
@@ -126,7 +116,7 @@ async function deploy (clientOptions = {}) {
 
     if (event.type === 'ready') {
       console.debug({ alias: event.payload.alias, public: event.payload.public })
-      await postComment(commentID, `✅ completed deployment for ${_previewURL}`)
+      await postComment(`✅ completed deployment for ${_previewURL}`)
       continue
     }
 
@@ -138,7 +128,7 @@ async function deploy (clientOptions = {}) {
     if (event.type === 'error') {
       console.error(event.payload)
       error = event.payload
-      await updateComment(commentID, `❌ deployment failed for ${_previewURL}`)
+      await postComment(`❌ deployment failed for ${_previewURL}`)
       break
     }
   }
