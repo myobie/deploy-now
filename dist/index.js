@@ -373,20 +373,36 @@ const { createDeployment } = __webpack_require__(477)
 ;(async () => {
   try {
     const token = core.getInput('zeit_token', { required: true })
-    const path = process.cwd()
-    console.log('path', path)
-    const deployment = await deploy(path, { token })
+
+    const deployment = await deploy('.', { token })
+
     console.debug('deployment', deployment)
+    console.log('deployment', deployment)
   } catch (error) {
     core.setFailed(error.message)
   }
 })()
 
-async function deploy (path, options) {
+async function deploy (path, clientOptions = {}) {
   let deployment
 
-  for await (const event of createDeployment(path, options)) {
+  clientOptions.path = path
+  clientOptions.debug = true
+  clientOptions.force = true
+
+  const previewURL = 'http://example.com/'
+
+  const deploymentOptions = {
+    build: {
+      env: {
+        PREVIEW_URL: previewURL
+      }
+    }
+  }
+
+  for await (const event of createDeployment(clientOptions, deploymentOptions)) {
     console.debug(event)
+    console.log(event)
 
     if (event.type === 'ready') {
       deployment = event.payload
