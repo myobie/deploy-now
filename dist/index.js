@@ -370,13 +370,17 @@ const core = __webpack_require__(470)
 // const github = require('@actions/github')
 const { createDeployment } = __webpack_require__(477)
 
-try {
-  const token = core.getInput('zeit_token', { required: true })
-  const deployment = deploy(process.cwd(), { token })
-  console.debug('deployment', deployment)
-} catch (error) {
-  core.setFailed(error.message)
-}
+;(async () => {
+  try {
+    const token = core.getInput('zeit_token', { required: true })
+    const path = process.cwd()
+    console.log('path', path)
+    const deployment = await deploy(path, { token })
+    console.debug('deployment', deployment)
+  } catch (error) {
+    core.setFailed(error.message)
+  }
+})()
 
 async function deploy (path, options) {
   let deployment
