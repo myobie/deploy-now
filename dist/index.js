@@ -886,6 +886,8 @@ const { createDeployment } = __webpack_require__(477)
 const { readFile } = __webpack_require__(747).promises
 // const { fetch } = require('now-client/utils')
 
+const octokit = new github.GitHub(core.getInput('GITHUB_TOKEN', { required: true }))
+
 ;(async () => {
   try {
     if (github.context.eventName !== 'push' &&
@@ -899,23 +901,15 @@ const { readFile } = __webpack_require__(747).promises
 
     const clientOptions = { path, token }
 
-    const url = await previewURL(clientOptions)
-
-    const deploymentOptions = {
-      build: {
-        env: {
-          PREVIEW_URL: url
-        }
-      }
-    }
-
-    const deployment = await deploy(clientOptions, deploymentOptions)
+    const deployment = await deploy(clientOptions)
 
     console.debug('deployment', deployment)
   } catch (error) {
     core.setFailed(error.message)
   }
 })()
+
+function getSHA () { return github.context.payload.after }
 
 function getBranch () {
   if (github.context.payload.pull_request) {
@@ -960,12 +954,38 @@ async function previewURL (options = {}) {
   return url
 }
 
-async function deploy (clientOptions = {}, deploymentOptions = {}) {
+async function postComment (body) {
+  if (github.context.eventName === 'pull_request') {
+    return octokit.issues.createComment({
+      owner: github.context.issue.owner,
+      repo: github.context.issue.repo,
+      issue_number: github.context.issue.number,
+      body
+    })
+  } else {
+    return octokit.repos.createCommitComment({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      commit_sha: getSHA(),
+      body
+    })
+  }
+}
+
+async function deploy (clientOptions = {}) {
   let deployment
   let error
 
   clientOptions.debug = true
   clientOptions.force = true
+
+  const deploymentOptions = {
+    build: {
+      env: {
+        PREVIEW_URL: await previewURL(clientOptions)
+      }
+    }
+  }
 
   for await (const event of createDeployment(clientOptions, deploymentOptions)) {
     console.debug('event', event.type)
@@ -981,8 +1001,11 @@ async function deploy (clientOptions = {}, deploymentOptions = {}) {
     if (event.type === 'created') {
       deployment = event.payload
 
+      // const deploymentID = deployment.url.split('-')[1].split('.')[0]
+
       console.debug({ regions: deployment.regions, url: deployment.url, status: deployment.status })
       console.debug('TODO: post a comment here')
+      postComment(`🚀 created deployment for ${deploymentOptions.build.env.PREVIEW_URL}`.trim())
       continue
     }
 
