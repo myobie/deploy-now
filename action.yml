@@ -1,0 +1,18 @@
+name: deploy now
+description: deploy to zeit's now on push
+inputs:
+  zeit_token:
+    required: true
+    description: API token for Zeit with access to this project
+  prod:
+    required: false
+    description: If true, then deploys the production site now
+    default: false
+outputs:
+  deployment_url:
+    description: Deployment information on the Zeit dashboard
+  preview_url:
+    description: Public URL to preview the deployed site
+runs:
+  using: node12
+  main: index.js
