@@ -891,6 +891,8 @@ const { readFile } = __webpack_require__(747).promises
     const token = core.getInput('zeit_token', { required: true })
     const path = process.cwd()
 
+    const clientOptions = { token }
+
     const url = await previewURL(path, { token })
 
     const deploymentOptions = {
@@ -901,7 +903,7 @@ const { readFile } = __webpack_require__(747).promises
       }
     }
 
-    const deployment = await deploy(path, { token }, deploymentOptions)
+    const deployment = await deploy(path, clientOptions, deploymentOptions)
 
     console.debug('deployment', deployment)
   } catch (error) {
@@ -924,7 +926,7 @@ async function previewURL (path, clientOptions = {}) {
 
   const nowJSON = JSON.parse(nowContent)
 
-  const project = nowJSON.name
+  const project = nowJSON.name.replace('/', '-')
 
   if (!project) {
     throw new Error('missing name: key in now.json – please include the project name in now.json')
@@ -952,22 +954,22 @@ async function deploy (path, clientOptions = {}, deploymentOptions = {}) {
 
     if (event.type === 'build-state-changed') {
       console.debug(event.payload.readyState, {
-        entrypoint: event.entrypoint,
-        use: event.use,
-        createdIn: event.createdIn
+        entrypoint: event.payload.entrypoint,
+        use: event.payload.use,
+        createdIn: event.payload.createdIn
       })
     }
 
     if (event.type === 'created') {
       deployment = event.payload
 
-      console.debug({ regions: event.regions, url: event.url, status: event.status })
+      console.debug({ regions: deployment.regions, url: deployment.url, status: deployment.status })
       console.debug('TODO: post a comment here')
       continue
     }
 
     if (event.type === 'ready') {
-      console.debug({ alias: event.alias, public: event.public })
+      console.debug({ alias: event.payload.alias, public: event.payload.public })
       console.debug('TODO: post a comment here')
       continue
     }
