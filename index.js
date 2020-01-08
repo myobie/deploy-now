@@ -6,12 +6,9 @@ const { readFile } = require('fs').promises
 
 ;(async () => {
   try {
-    console.debug('eventName', github.context.eventName)
-    console.debug('action', github.context.payload.action)
-
     if (github.context.eventName !== 'push' &&
       !(github.context.eventName === 'pull_request' && github.context.payload.action === 'synchronize')) {
-      core.setFailed('deploy-now only deploys for pushes or pull_request synchronizes')
+      core.setFailed('deploy-now only deploys to now for pushes or pull_request synchronizes')
       return
     }
 
