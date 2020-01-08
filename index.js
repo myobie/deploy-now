@@ -17,7 +17,7 @@ const { readFile } = require('fs').promises
 
     const clientOptions = { path, token }
 
-    const url = await previewURL(path, { token })
+    const url = await previewURL(clientOptions)
 
     const deploymentOptions = {
       build: {
