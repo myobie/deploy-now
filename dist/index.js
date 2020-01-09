@@ -489,14 +489,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 45:
-/***/ (function() {
-
-eval("require")("now-client/utils");
-
-
-/***/ }),
-
 /***/ 47:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -10426,7 +10418,7 @@ module.exports = factory();
 
 const { zeitToken: token, path, json, debug } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
-const { fetch } = __webpack_require__(45)
+const { fetch } = __webpack_require__(665)
 const gh = __webpack_require__(684)
 
 exports.deploy = async function () {
@@ -12636,6 +12628,14 @@ if (process.platform === 'linux') {
     'SIGUNUSED'
   )
 }
+
+
+/***/ }),
+
+/***/ 665:
+/***/ (function() {
+
+eval("require")("./node_modules/now-client/utils");
 
 
 /***/ }),

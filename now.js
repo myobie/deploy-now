@@ -1,6 +1,6 @@
 const { zeitToken: token, path, json, debug } = require('./config')
 const { createDeployment } = require('now-client')
-const { fetch } = require('now-client/utils')
+const { fetch } = require('./node_modules/now-client/utils')
 const gh = require('./gh')
 
 exports.deploy = async function () {
