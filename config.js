@@ -16,4 +16,6 @@ export const json = (() => {
   if (!json.name) {
     throw new Error("missing key 'name' in now.json – please include the project name in now.json and retry")
   }
+
+  return json
 })()
