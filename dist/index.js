@@ -686,10 +686,8 @@ const { readFileSync } = __webpack_require__(747)
 
 const githubToken = core.getInput('github_token', { required: true })
 const zeitToken = core.getInput('zeit_token', { required: true })
-const prod = core.getInput('prod') === true
-const debug = core.getInput('debug') === true
-
-console.debug('what is debug?', core.getInput('debug'), typeof core.getInput('debug'))
+const prod = isTrue(core.getInput('prod'))
+const debug = isTrue(core.getInput('debug'))
 
 const path = process.cwd()
 
@@ -710,6 +708,10 @@ const json = (() => {
 
   return json
 })()
+
+function isTrue (thing) {
+  return thing === true || thing === 'true'
+}
 
 
 /***/ }),
