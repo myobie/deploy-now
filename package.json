@@ -11,7 +11,7 @@
   },
   "scripts": {
     "lint": "standard",
-    "package": "ncc build index.js -o dist"
+    "package": "ncc build index.js -o dist -s"
   },
   "dependencies": {
     "@actions/core": "^1.2.0",
