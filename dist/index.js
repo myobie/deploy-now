@@ -10412,7 +10412,7 @@ const core = __webpack_require__(470)
 const { path, json } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
 // const { fetch } = require('now-client/utils')
-const gh = __webpack_require__(922)
+const gh = __webpack_require__(684)
 
 const token = core.getInput('zeit_token', { required: true })
 const prod = core.getInput('prod') === true
@@ -17083,14 +17083,6 @@ module.exports = {
   utimesMillis,
   utimesMillisSync
 }
-
-
-/***/ }),
-
-/***/ 922:
-/***/ (function() {
-
-eval("require")("./github");
 
 
 /***/ }),

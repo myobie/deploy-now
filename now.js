@@ -2,7 +2,7 @@ const core = require('@actions/core')
 const { path, json } = require('./config')
 const { createDeployment } = require('now-client')
 // const { fetch } = require('now-client/utils')
-const gh = require('./github')
+const gh = require('./gh')
 
 export const token = core.getInput('zeit_token', { required: true })
 export const prod = core.getInput('prod') === true
