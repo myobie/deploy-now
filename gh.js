@@ -50,8 +50,13 @@ export async function createDeployment (previewAlias) {
         environment_url: previewAlias,
         owner,
         repo,
-        state
+        state,
+        mediaType: {
+          previews: ['flash', 'ant-man']
+        }
       })
+
+      // TODO: supply the log_url that points to the zeit dashboard page for the zeit deployment
 
       return resp.data
     }

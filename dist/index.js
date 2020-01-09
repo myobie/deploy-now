@@ -10428,6 +10428,7 @@ async function deploy () {
   const config = buildFullConfig()
 
   const deployment = await gh.createDeployment()
+    await deployment.update('pending')
 
   for await (const event of createDeployment(config.client, config.deployment)) {
     if (event.type === 'created') {
@@ -13101,8 +13102,13 @@ async function createDeployment (previewAlias) {
         environment_url: previewAlias,
         owner,
         repo,
-        state
+        state,
+        mediaType: {
+          previews: ['flash', 'ant-man']
+        }
       })
+
+      // TODO: supply the log_url that points to the zeit dashboard page for the zeit deployment
 
       return resp.data
     }

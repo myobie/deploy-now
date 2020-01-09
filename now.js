@@ -16,6 +16,7 @@ export async function deploy () {
   const config = buildFullConfig()
 
   const deployment = await gh.createDeployment()
+    await deployment.update('pending')
 
   for await (const event of createDeployment(config.client, config.deployment)) {
     if (event.type === 'created') {
