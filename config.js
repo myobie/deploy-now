@@ -6,6 +6,8 @@ export const zeitToken = core.getInput('zeit_token', { required: true })
 export const prod = core.getInput('prod') === true
 export const debug = core.getInput('debug') === true
 
+console.debug('what is debug?', core.getInput('debug'), typeof core.getInput('debug'))
+
 export const path = process.cwd()
 
 export const json = (() => {
