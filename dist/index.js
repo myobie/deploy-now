@@ -36,6 +36,8 @@ module.exports =
 /******/ 		// Load entry module and return exports
 /******/ 		return __webpack_require__(104);
 /******/ 	};
+/******/ 	// initialize runtime
+/******/ 	runtime(__webpack_require__);
 /******/
 /******/ 	// run startup
 /******/ 	return startup();
@@ -668,6 +670,36 @@ module.exports = {"name":"now-client","version":"6.0.1","main":"dist/index.js","
 
 /***/ }),
 
+/***/ 68:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "path", function() { return path; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "json", function() { return json; });
+const { readFileSync } = __webpack_require__(747)
+
+const path = process.cwd()
+
+const json = (() => {
+  let content
+
+  try {
+    content = readFileSync(path + '/now.json', 'utf8')
+  } catch (e) {
+    throw new Error('cannot find a now.json file, please refer to https://github.com/myobie/deploy-now#README')
+  }
+
+  let json = JSON.parse(content)
+
+  if (!json.name) {
+    throw new Error("missing key 'name' in now.json – please include the project name in now.json and retry")
+  }
+})()
+
+
+/***/ }),
+
 /***/ 73:
 /***/ (function(module) {
 
@@ -881,146 +913,25 @@ module.exports = moveSync
 /***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
 const core = __webpack_require__(470)
-const github = __webpack_require__(469)
-const { createDeployment } = __webpack_require__(477)
-const { readFile } = __webpack_require__(747).promises
-// const { fetch } = require('now-client/utils')
-
-const octokit = new github.GitHub(core.getInput('github_token', { required: true }))
+const { eventName } = __webpack_require__(684)
+const { deploy } = __webpack_require__(531)
 
 ;(async () => {
   try {
-    if (github.context.eventName !== 'push') {
-      core.setFailed('deploy-now only deploys to now for pushes')
+    if (eventName !== 'push' && eventName !== 'pull_request') {
+      exit('deploy-now only deploys to now for pushes and pull_request synchronizes')
       return
     }
 
-    const path = process.cwd()
-    const token = core.getInput('zeit_token', { required: true })
+    const result = await deploy()
 
-    const clientOptions = { path, token }
-
-    const deployment = await deploy(clientOptions)
-
-    console.debug('deployment', deployment)
+    console.debug('deployment result', result)
   } catch (error) {
-    core.setFailed(error.message)
+    exit(error.message)
   }
 })()
 
-function getSHA () { return github.context.payload.after }
-
-function getBranch () {
-  const ref = github.context.ref
-  // the first two segments are not the branch
-  return ref.split('/').slice(2).join('-').toLowerCase()
-}
-
-async function previewURL (options = {}) {
-  const branch = getBranch()
-  console.debug('branch', branch)
-
-  let nowContent
-
-  try {
-    nowContent = await readFile(options.path + '/now.json', 'utf8')
-  } catch (e) {
-    throw new Error('cannot find a now.json file, please refer to https://github.com/myobie/deploy-now#README')
-  }
-
-  const nowJSON = JSON.parse(nowContent)
-
-  const project = nowJSON.name.replace('/', '-')
-
-  if (!project) {
-    throw new Error('missing name: key in now.json – please include the project name in now.json')
-  }
-
-  console.debug('now project', project)
-
-  const scope = nowJSON.scope || 'myobie' // TOOD: replace which whoami
-
-  console.debug('now scope', scope)
-
-  const url = `https://${project}-git-${branch}.${scope}.now.sh`
-
-  console.debug('previewURL', url)
-
-  return url
-}
-
-async function postComment (body) {
-  return octokit.repos.createCommitComment({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    commit_sha: getSHA(),
-    body
-  })
-}
-
-async function deploy (clientOptions = {}) {
-  let deployment
-  let error
-
-  clientOptions.debug = true
-  clientOptions.force = true
-
-  const _previewURL = await previewURL(clientOptions)
-
-  const deploymentOptions = {
-    build: {
-      env: {
-        PREVIEW_URL: previewURL
-      }
-    }
-  }
-
-  for await (const event of createDeployment(clientOptions, deploymentOptions)) {
-    console.debug('event', event.type)
-
-    if (event.type === 'build-state-changed') {
-      console.debug(event.payload.readyState, {
-        entrypoint: event.payload.entrypoint,
-        use: event.payload.use,
-        createdIn: event.payload.createdIn
-      })
-    }
-
-    if (event.type === 'created') {
-      deployment = event.payload
-
-      // const deploymentID = deployment.url.split('-')[1].split('.')[0]
-
-      console.debug({ regions: deployment.regions, url: deployment.url, status: deployment.status })
-      console.debug('TODO: post a comment here')
-      continue
-    }
-
-    if (event.type === 'ready') {
-      console.debug({ alias: event.payload.alias, public: event.payload.public })
-      await postComment(`✅ completed deployment for ${_previewURL}`)
-      continue
-    }
-
-    if (event.type === 'warning') {
-      console.error(event.payload)
-      continue
-    }
-
-    if (event.type === 'error') {
-      console.error(event.payload)
-      error = event.payload
-      await postComment(`❌ deployment failed for ${_previewURL}`)
-      break
-    }
-  }
-
-  if (error) {
-    throw error
-  } else {
-    return deployment
-  }
-}
+function exit (message) { core.setFailed(message) }
 
 
 /***/ }),
@@ -10487,6 +10398,118 @@ module.exports = factory();
 
 /***/ }),
 
+/***/ 531:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "token", function() { return token; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "force", function() { return force; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
+const core = __webpack_require__(470)
+const { path, json } = __webpack_require__(68)
+const { createDeployment } = __webpack_require__(477)
+// const { fetch } = require('now-client/utils')
+const gh = __webpack_require__(922)
+
+const token = core.getInput('zeit_token', { required: true })
+const prod = core.getInput('prod') === true
+const force = core.getInput('force') === true
+const debug = core.getInput('debug') === true
+
+async function deploy () {
+  let deploymentResult
+  let error
+
+  const config = buildFullConfig()
+
+  const deployment = await gh.createDeployment()
+
+  for await (const event of createDeployment(config.client, config.deployment)) {
+    if (event.type === 'created') {
+      await deployment.update('queued')
+    }
+
+    if (event.type === 'build-state-changed') {
+      await deployment.update('in_progress')
+    }
+
+    if (event.type === 'ready') {
+      await deployment.update('success')
+      await gh.createComment(`🎈 deployment finished for ${config.alias}`)
+      deploymentResult = event.payload
+    }
+
+    if (event.type === 'warning') {
+      console.error(event.payload)
+    }
+
+    if (event.type === 'error') {
+      await deployment.update('failure')
+      await gh.createComment(`❌ deployment failed for ${config.alias}`)
+
+      error = event.payload
+      console.error(event)
+      break
+    }
+  }
+
+  if (error) {
+    throw error
+  } else {
+    return deploymentResult
+  }
+}
+
+async function buildFullConfig () {
+  const project = json.name.replace('/', '-').replace('.', '')
+  const user = await fetchUser()
+  const scope = json.scope || user
+  const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
+
+  const client = {
+    path,
+    token,
+    force,
+    debug
+  }
+
+  const deployment = {
+    env: {
+      GITHUB_REPO: gh.repo,
+      GITHUB_OWNER: gh.owner,
+      GITHUB_BRANCH: gh.branch,
+      NOW_PREVIEW_ALIAS: alias
+    },
+    build: {
+      env: {
+        GITHUB_REPO: gh.repo,
+        GITHUB_OWNER: gh.owner,
+        GITHUB_BRANCH: gh.branch,
+        NOW_PREVIEW_ALIAS: alias
+      }
+    }
+  }
+
+  return {
+    project,
+    user,
+    scope,
+    alias,
+    client,
+    deployment
+  }
+}
+
+async function fetchUser () {
+  return 'myobie'
+}
+
+
+/***/ }),
+
 /***/ 536:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -13004,6 +13027,104 @@ exports.fromPromise = function (fn) {
     if (typeof cb !== 'function') return fn.apply(this, arguments)
     else fn.apply(this, arguments).then(r => cb(null, r), cb)
   }, 'name', { value: fn.name })
+}
+
+
+/***/ }),
+
+/***/ 684:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "token", function() { return token; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "client", function() { return client; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eventName", function() { return eventName; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "owner", function() { return owner; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "repo", function() { return repo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sha", function() { return sha; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createDeployment", function() { return createDeployment; });
+const core = __webpack_require__(470)
+const github = __webpack_require__(469)
+
+const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
+
+const token = core.getInput('github_token', { required: true })
+
+const octokit = new github.GitHub(token)
+
+const client = octokit
+const eventName = github.context.eventName
+const owner = github.context.repo.owner
+const repo = github.context.repo.repo
+const sha = getSHA()
+const branch = getBranch()
+const environment = getDeploymentEnvironment()
+
+async function createComment (body) {
+  const resp = await octokit.repos.createCommitComment({
+    commit_sha: getSHA(),
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
+}
+
+async function createDeployment (previewAlias) {
+  const resp = octokit.repos.createDeployment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    ref: branch,
+    environment
+  })
+
+  const data = resp.data
+  const id = data.id
+
+  return {
+    data,
+    id,
+    update: async (state) => {
+      if (!validDeploymentStates.contains(state)) {
+        throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
+      }
+
+      const resp = await octokit.repos.createDeploymentStatus({
+        deployment_id: id,
+        environment_url: previewAlias,
+        owner,
+        repo,
+        state
+      })
+
+      return resp.data
+    }
+  }
+}
+
+function getSHA () { return github.context.payload.after }
+
+function getBranch () {
+  if (github.context.payload.pull_request) {
+    return github.context.payload.pull_request.head.ref
+  } else {
+    const ref = github.context.ref
+    // the first two segments are not the branch
+    return ref.split('/').slice(2).join('-').toLowerCase()
+  }
+}
+
+function getDeploymentEnvironment () {
+  if (getBranch() === 'master') {
+    return 'production'
+  } else {
+    return 'preview'
+  }
 }
 
 
@@ -16966,6 +17087,14 @@ module.exports = {
 
 /***/ }),
 
+/***/ 922:
+/***/ (function() {
+
+eval("require")("./github");
+
+
+/***/ }),
+
 /***/ 929:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -18008,4 +18137,31 @@ RetryOperation.prototype.mainError = function() {
 
 /***/ })
 
-/******/ });
+/******/ },
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ 	"use strict";
+/******/ 
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getter */
+/******/ 	!function() {
+/******/ 		// define getter function for harmony exports
+/******/ 		var hasOwnProperty = Object.prototype.hasOwnProperty;
+/******/ 		__webpack_require__.d = function(exports, name, getter) {
+/******/ 			if(!hasOwnProperty.call(exports, name)) {
+/******/ 				Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ }
+);
