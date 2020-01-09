@@ -6,7 +6,11 @@
   "repository": "https://github.com/myobie/action-deploy-now",
   "author": "Nathan Herald <me@nathanherald.com>",
   "license": "MIT",
+  "standard": {
+    "ignore": ["dist"]
+  },
   "scripts": {
+    "lint": "standard",
     "package": "ncc build index.js -o dist"
   },
   "dependencies": {
@@ -15,6 +19,7 @@
     "now-client": "^6.0.1"
   },
   "devDependencies": {
-    "@zeit/ncc": "^0.21.0"
+    "@zeit/ncc": "^0.21.0",
+    "standard": "^14.3.1"
   }
 }
