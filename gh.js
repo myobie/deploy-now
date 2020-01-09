@@ -16,30 +16,41 @@ export const eventName = github.context.eventName
 export const owner = github.context.repo.owner
 export const repo = github.context.repo.repo
 export const sha = getSHA()
+export const shortSHA = sha.substring(0, 8)
 export const branch = getBranch()
 export const environment = getDeploymentEnvironment()
 
 export async function createComment (body) {
-  const resp = await octokit.repos.createCommitComment({
+  const prs = await associatedPullRequests()
+
+  if (prs.length === 0) {
+    createCommitComment(body)
+  } else {
+    prs.forEach(pr => {
+      // KNOWN ISSUE: this doesn't paginate, so will be limited to the "first page"
+      createPullRequestComment(pr.number, body)
+    })
+  }
+}
+
+async function associatedPullRequests () {
+  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
     commit_sha: sha,
     owner,
-    repo,
-    body
+    repo
   })
 
   return resp.data
 }
 
 export async function createDeployment (previewAlias) {
-  const resp = octokit.repos.createDeployment({
+  const resp = await octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    required_contexts: [],
+    required_contexts: [], // always deploy
     ref: sha,
     environment
   })
-
-  console.debug('deployment resp', resp)
 
   const data = resp.data
   const id = data.id
@@ -88,4 +99,26 @@ function getDeploymentEnvironment () {
   } else {
     return 'preview'
   }
+}
+
+async function createCommitComment (body) {
+  const resp = await octokit.repos.createCommitComment({
+    commit_sha: sha,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
+}
+
+async function createPullRequestComment (number, body) {
+  const resp = await octokit.issues.createComment({
+    issue_number: number,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
 }

@@ -10427,9 +10427,13 @@ const gh = __webpack_require__(684)
 
 async function deploy () {
   let deploymentResult
+  let deploymentURL
   let error
 
   const config = buildFullConfig()
+
+  const projectURL = `https://zeit.co/${config.scope}/${config.name}`
+  const actionURL = '#' // TODO: what is the url to this action's logs?
 
   const deployment = await gh.createDeployment()
   await deployment.update('pending')
@@ -10445,7 +10449,7 @@ async function deploy () {
 
     if (event.type === 'ready') {
       await deployment.update('success')
-      await gh.createComment(`🎈 deployment finished for ${config.alias}`)
+      await gh.createComment(`🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.name}](${projectURL}) and is available at 🌍 <${config.alias}>. `.trim())
       deploymentResult = event.payload
     }
 
@@ -10455,7 +10459,11 @@ async function deploy () {
 
     if (event.type === 'error') {
       await deployment.update('failure')
-      await gh.createComment(`❌ deployment failed for ${config.alias}`)
+      await gh.createComment(`
+❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.name}](${projectURL}).
+
+Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploymentURL}) over on now to see what might have happened.
+`.trim())
 
       error = event.payload
       console.error(event)
@@ -10511,6 +10519,7 @@ async function buildFullConfig () {
 }
 
 async function fetchUser () {
+  // TODO: hit the zeit API and get the current username
   return 'myobie'
 }
 
@@ -13049,6 +13058,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "owner", function() { return owner; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "repo", function() { return repo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sha", function() { return sha; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "shortSHA", function() { return shortSHA; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
@@ -13071,30 +13081,41 @@ const eventName = github.context.eventName
 const owner = github.context.repo.owner
 const repo = github.context.repo.repo
 const sha = getSHA()
+const shortSHA = sha.substring(0, 8)
 const branch = getBranch()
 const environment = getDeploymentEnvironment()
 
 async function createComment (body) {
-  const resp = await octokit.repos.createCommitComment({
+  const prs = await associatedPullRequests()
+
+  if (prs.length === 0) {
+    createCommitComment(body)
+  } else {
+    prs.forEach(pr => {
+      // KNOWN ISSUE: this doesn't paginate, so will be limited to the "first page"
+      createPullRequestComment(pr.number, body)
+    })
+  }
+}
+
+async function associatedPullRequests () {
+  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
     commit_sha: sha,
     owner,
-    repo,
-    body
+    repo
   })
 
   return resp.data
 }
 
 async function createDeployment (previewAlias) {
-  const resp = octokit.repos.createDeployment({
+  const resp = await octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    required_contexts: [],
+    required_contexts: [], // always deploy
     ref: sha,
     environment
   })
-
-  console.debug('deployment resp', resp)
 
   const data = resp.data
   const id = data.id
@@ -13143,6 +13164,28 @@ function getDeploymentEnvironment () {
   } else {
     return 'preview'
   }
+}
+
+async function createCommitComment (body) {
+  const resp = await octokit.repos.createCommitComment({
+    commit_sha: sha,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
+}
+
+async function createPullRequestComment (number, body) {
+  const resp = await octokit.issues.createComment({
+    issue_number: number,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
 }
 
 
