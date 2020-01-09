@@ -59,7 +59,7 @@ export async function createDeployment (previewAlias) {
     data,
     id,
     update: async (state) => {
-      if (!validDeploymentStates.contains(state)) {
+      if (!validDeploymentStates.includes(state)) {
         throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
       }
 
