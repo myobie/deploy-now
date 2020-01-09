@@ -1,4 +1,10 @@
+const core = require('@actions/core')
 const { readFileSync } = require('fs')
+
+export const githubToken = core.getInput('github_token', { required: true })
+export const zeitToken = core.getInput('zeit_token', { required: true })
+export const prod = core.getInput('prod') === true
+export const debug = core.getInput('debug') === true
 
 export const path = process.cwd()
 

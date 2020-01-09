@@ -675,9 +675,19 @@ module.exports = {"name":"now-client","version":"6.0.1","main":"dist/index.js","
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "githubToken", function() { return githubToken; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zeitToken", function() { return zeitToken; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "path", function() { return path; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "json", function() { return json; });
+const core = __webpack_require__(470)
 const { readFileSync } = __webpack_require__(747)
+
+const githubToken = core.getInput('github_token', { required: true })
+const zeitToken = core.getInput('zeit_token', { required: true })
+const prod = core.getInput('prod') === true
+const debug = core.getInput('debug') === true
 
 const path = process.cwd()
 
@@ -10405,21 +10415,11 @@ module.exports = factory();
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "token", function() { return token; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "force", function() { return force; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
-const core = __webpack_require__(470)
-const { path, json } = __webpack_require__(68)
+const { zeitToken: token, path, json, debug } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
 // const { fetch } = require('now-client/utils')
 const gh = __webpack_require__(684)
-
-const token = core.getInput('zeit_token', { required: true })
-const prod = core.getInput('prod') === true
-const force = core.getInput('force') === true
-const debug = core.getInput('debug') === true
 
 async function deploy () {
   let deploymentResult
@@ -10473,9 +10473,9 @@ async function buildFullConfig () {
   const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
 
   const client = {
+    force: true, // I really mean it
     path,
     token,
-    force,
     debug
   }
 
@@ -13040,7 +13040,6 @@ exports.fromPromise = function (fn) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "token", function() { return token; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "client", function() { return client; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eventName", function() { return eventName; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "owner", function() { return owner; });
@@ -13050,14 +13049,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createDeployment", function() { return createDeployment; });
-const core = __webpack_require__(470)
 const github = __webpack_require__(469)
+const { githubToken: token, debug } = __webpack_require__(68)
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
-const token = core.getInput('github_token', { required: true })
+const octokitOptions = {}
 
-const octokit = new github.GitHub(token, { log: console })
+if (debug) {
+  octokitOptions.log = console
+}
+
+const octokit = new github.GitHub(token, octokitOptions)
 
 const client = octokit
 const eventName = github.context.eventName

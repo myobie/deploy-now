@@ -1,11 +1,15 @@
-const core = require('@actions/core')
 const github = require('@actions/github')
+const { githubToken: token, debug } = require('./config')
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
-export const token = core.getInput('github_token', { required: true })
+const octokitOptions = {}
 
-const octokit = new github.GitHub(token, { log: console })
+if (debug) {
+  octokitOptions.log = console
+}
+
+const octokit = new github.GitHub(token, octokitOptions)
 
 export const client = octokit
 export const eventName = github.context.eventName

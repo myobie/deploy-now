@@ -1,13 +1,7 @@
-const core = require('@actions/core')
-const { path, json } = require('./config')
+const { zeitToken: token, path, json, debug } = require('./config')
 const { createDeployment } = require('now-client')
 // const { fetch } = require('now-client/utils')
 const gh = require('./gh')
-
-export const token = core.getInput('zeit_token', { required: true })
-export const prod = core.getInput('prod') === true
-export const force = core.getInput('force') === true
-export const debug = core.getInput('debug') === true
 
 export async function deploy () {
   let deploymentResult
@@ -61,9 +55,9 @@ async function buildFullConfig () {
   const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
 
   const client = {
+    force: true, // I really mean it
     path,
     token,
-    force,
     debug
   }
 
