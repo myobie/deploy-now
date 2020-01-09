@@ -941,6 +941,8 @@ const { deploy } = __webpack_require__(531)
 
     console.debug('deployment result', result)
   } catch (error) {
+    console.error(error.message)
+    console.error(error.stack.join('\n'))
     exit(error.message)
   }
 })()
