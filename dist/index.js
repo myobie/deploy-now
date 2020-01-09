@@ -10426,7 +10426,7 @@ exports.deploy = async function () {
   let deploymentURL
   let error
 
-  const config = buildFullConfig()
+  const config = await buildFullConfig()
 
   const projectURL = `https://zeit.co/${config.scope}/${config.name}`
   const actionURL = '#' // TODO: what is the url to this action's logs?
