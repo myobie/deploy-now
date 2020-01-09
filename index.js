@@ -13,8 +13,7 @@ const { deploy } = require('./now')
 
     console.debug('deployment result', result)
   } catch (error) {
-    console.error(error.message)
-    console.error(error.stack.join('\n'))
+    console.error(error.stack)
     exit(error.message)
   }
 })()
