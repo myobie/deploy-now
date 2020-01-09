@@ -13094,6 +13094,8 @@ async function createDeployment (previewAlias) {
     environment
   })
 
+  console.debug('deployment resp', resp)
+
   const data = resp.data
   const id = data.id
 
