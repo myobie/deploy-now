@@ -21,7 +21,7 @@ export const environment = getDeploymentEnvironment()
 
 export async function createComment (body) {
   const resp = await octokit.repos.createCommitComment({
-    commit_sha: getSHA(),
+    commit_sha: sha,
     owner,
     repo,
     body
@@ -34,7 +34,8 @@ export async function createDeployment (previewAlias) {
   const resp = octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    ref: branch,
+    required_contexts: [],
+    ref: sha,
     environment
   })
 
