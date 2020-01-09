@@ -11,16 +11,31 @@ if (debug) {
 
 const octokit = new github.GitHub(token, octokitOptions)
 
-export const client = octokit
-export const eventName = github.context.eventName
-export const owner = github.context.repo.owner
-export const repo = github.context.repo.repo
-export const sha = getSHA()
-export const shortSHA = sha.substring(0, 8)
-export const branch = getBranch()
-export const environment = getDeploymentEnvironment()
+const client = octokit
+exports.client = client
 
-export async function createComment (body) {
+const eventName = github.context.eventName
+exports.eventName = eventName
+
+const owner = github.context.repo.owner
+exports.owner = owner
+
+const repo = github.context.repo.repo
+exports.repo = repo
+
+const sha = getSHA()
+exports.sha = sha
+
+const shortSHA = sha.substring(0, 8)
+exports.shortSHA = shortSHA
+
+const branch = getBranch()
+exports.branch = branch
+
+const environment = getDeploymentEnvironment()
+exports.environment = environment
+
+exports.createComment = async function (body) {
   const prs = await associatedPullRequests()
 
   if (prs.length === 0) {
@@ -33,17 +48,7 @@ export async function createComment (body) {
   }
 }
 
-async function associatedPullRequests () {
-  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
-    commit_sha: sha,
-    owner,
-    repo
-  })
-
-  return resp.data
-}
-
-export async function createDeployment (previewAlias) {
+exports.createDeployment = async function (previewAlias) {
   const resp = await octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -99,6 +104,16 @@ function getDeploymentEnvironment () {
   } else {
     return 'preview'
   }
+}
+
+async function associatedPullRequests () {
+  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
+    commit_sha: sha,
+    owner,
+    repo
+  })
+
+  return resp.data
 }
 
 async function createCommitComment (body) {

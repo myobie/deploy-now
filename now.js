@@ -3,7 +3,7 @@ const { createDeployment } = require('now-client')
 // const { fetch } = require('now-client/utils')
 const gh = require('./gh')
 
-export async function deploy () {
+exports.deploy = async function () {
   let deploymentResult
   let deploymentURL
   let error
