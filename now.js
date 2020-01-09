@@ -10,7 +10,6 @@ exports.deploy = async function () {
 
   const config = await buildFullConfig()
 
-  const projectURL = `https://zeit.co/${config.scope}/${config.name}`
   const actionURL = '#' // TODO: what is the url to this action's logs?
 
   const deployment = await gh.createDeployment()
@@ -27,7 +26,10 @@ exports.deploy = async function () {
 
     if (event.type === 'ready') {
       await deployment.update('success')
-      await gh.createComment(`🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.name}](${projectURL}) and is available at 🌍 <${config.alias}>. `.trim())
+      await gh.createComment(`
+🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
+🌍 <${config.alias}>.
+`.trim())
       deploymentResult = event.payload
     }
 
@@ -38,7 +40,7 @@ exports.deploy = async function () {
     if (event.type === 'error') {
       await deployment.update('failure')
       await gh.createComment(`
-❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.name}](${projectURL}).
+❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
 Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploymentURL}) over on now to see what might have happened.
 `.trim())
@@ -61,6 +63,7 @@ async function buildFullConfig () {
   const user = await fetchUser()
   const scope = json.scope || user
   const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
+  const projectURL = `https://zeit.co/${scope}/${project}`
 
   const client = {
     force: true, // I really mean it
@@ -88,6 +91,7 @@ async function buildFullConfig () {
 
   return {
     project,
+    projectURL,
     user,
     scope,
     alias,
