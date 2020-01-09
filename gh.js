@@ -1,5 +1,5 @@
-import github from '@actions/github'
-import { githubToken as token, debug } from './config'
+const github = require('@actions/github')
+const { githubToken: token, debug } = require('./config')
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
