@@ -34,7 +34,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(104);
+/******/ 		return __webpack_require__(3);
 /******/ 	};
 /******/ 	// initialize runtime
 /******/ 	runtime(__webpack_require__);
@@ -117,6 +117,314 @@ const osName = (platform, release) => {
 };
 
 module.exports = osName;
+
+
+/***/ }),
+
+/***/ 3:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __webpack_require__(470);
+var core_default = /*#__PURE__*/__webpack_require__.n(core);
+
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __webpack_require__(469);
+var github_default = /*#__PURE__*/__webpack_require__.n(github);
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __webpack_require__(747);
+
+// CONCATENATED MODULE: ./config.js
+
+
+
+const githubToken = core_default().getInput('github_token', { required: true })
+const zeitToken = core_default().getInput('zeit_token', { required: true })
+const prod = isTrue(core_default().getInput('prod'))
+const debug = isTrue(core_default().getInput('debug'))
+
+const path = process.cwd()
+
+const config_json = (() => {
+  let content
+
+  try {
+    content = Object(external_fs_.readFileSync)(path + '/now.json', 'utf8')
+  } catch (e) {
+    throw new Error('cannot find a now.json file, please refer to https://github.com/myobie/deploy-now#README')
+  }
+
+  const json = JSON.parse(content)
+
+  if (!json.name) {
+    throw new Error("missing key 'name' in now.json – please include the project name in now.json and retry")
+  }
+
+  return json
+})()
+
+function isTrue (thing) {
+  return thing === true || thing === 'true'
+}
+
+// CONCATENATED MODULE: ./gh.js
+
+
+
+const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
+
+const octokitOptions = {}
+
+if (debug) {
+  octokitOptions.log = console
+}
+
+const octokit = new github_default.a.GitHub(githubToken, octokitOptions)
+
+const gh_client = octokit
+const eventName = github_default.a.context.eventName
+const owner = github_default.a.context.repo.owner
+const repo = github_default.a.context.repo.repo
+const sha = getSHA()
+const shortSHA = sha.substring(0, 8)
+const branch = getBranch()
+const environment = getDeploymentEnvironment()
+
+async function createComment (body) {
+  const prs = await associatedPullRequests()
+
+  if (prs.length === 0) {
+    createCommitComment(body)
+  } else {
+    prs.forEach(pr => {
+      // KNOWN ISSUE: this doesn't paginate, so will be limited to the "first page"
+      createPullRequestComment(pr.number, body)
+    })
+  }
+}
+
+async function associatedPullRequests () {
+  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
+    commit_sha: sha,
+    owner,
+    repo
+  })
+
+  return resp.data
+}
+
+async function createDeployment (previewAlias) {
+  const resp = await octokit.repos.createDeployment({
+    owner: github_default.a.context.repo.owner,
+    repo: github_default.a.context.repo.repo,
+    required_contexts: [], // always deploy
+    ref: sha,
+    environment
+  })
+
+  const data = resp.data
+  const id = data.id
+
+  return {
+    data,
+    id,
+    update: async (state) => {
+      if (!validDeploymentStates.includes(state)) {
+        throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
+      }
+
+      const resp = await octokit.repos.createDeploymentStatus({
+        deployment_id: id,
+        environment_url: previewAlias,
+        owner,
+        repo,
+        state,
+        mediaType: {
+          previews: ['flash', 'ant-man']
+        }
+      })
+
+      // TODO: supply the log_url that points to the zeit dashboard page for the zeit deployment
+
+      return resp.data
+    }
+  }
+}
+
+function getSHA () { return github_default.a.context.payload.after }
+
+function getBranch () {
+  if (github_default.a.context.payload.pull_request) {
+    return github_default.a.context.payload.pull_request.head.ref
+  } else {
+    const ref = github_default.a.context.ref
+    // the first two segments are not the branch
+    return ref.split('/').slice(2).join('-').toLowerCase()
+  }
+}
+
+function getDeploymentEnvironment () {
+  if (getBranch() === 'master') {
+    return 'production'
+  } else {
+    return 'preview'
+  }
+}
+
+async function createCommitComment (body) {
+  const resp = await octokit.repos.createCommitComment({
+    commit_sha: sha,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
+}
+
+async function createPullRequestComment (number, body) {
+  const resp = await octokit.issues.createComment({
+    issue_number: number,
+    owner,
+    repo,
+    body
+  })
+
+  return resp.data
+}
+
+// EXTERNAL MODULE: ./node_modules/now-client/dist/index.js
+var dist = __webpack_require__(477);
+
+// CONCATENATED MODULE: ./now.js
+
+
+
+// const { fetch } = require('now-client/utils')
+
+async function deploy () {
+  let deploymentResult
+  let deploymentURL
+  let error
+
+  const config = buildFullConfig()
+
+  const projectURL = `https://zeit.co/${config.scope}/${config.name}`
+  const actionURL = '#' // TODO: what is the url to this action's logs?
+
+  const deployment = await createDeployment()
+  await deployment.update('pending')
+
+  for await (const event of Object(dist.createDeployment)(config.client, config.deployment)) {
+    if (event.type === 'created') {
+      await deployment.update('queued')
+    }
+
+    if (event.type === 'build-state-changed') {
+      await deployment.update('in_progress')
+    }
+
+    if (event.type === 'ready') {
+      await deployment.update('success')
+      await createComment(`🎈 \`${shortSHA}\` was deployed to now for the project [${config.name}](${projectURL}) and is available at 🌍 <${config.alias}>. `.trim())
+      deploymentResult = event.payload
+    }
+
+    if (event.type === 'warning') {
+      console.error(event.payload)
+    }
+
+    if (event.type === 'error') {
+      await deployment.update('failure')
+      await createComment(`
+❌ \`${shortSHA}\` failed to deploy to now for the project [${config.name}](${projectURL}).
+
+Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploymentURL}) over on now to see what might have happened.
+`.trim())
+
+      error = event.payload
+      console.error(event)
+      break
+    }
+  }
+
+  if (error) {
+    throw error
+  } else {
+    return deploymentResult
+  }
+}
+
+async function buildFullConfig () {
+  const project = config_json.name.replace('/', '-').replace('.', '')
+  const user = await fetchUser()
+  const scope = config_json.scope || user
+  const alias = `https://${project}-git-${branch}.${scope}.now.sh`
+
+  const client = {
+    force: true, // I really mean it
+    path: path,
+    token: zeitToken,
+    debug: debug
+  }
+
+  const deployment = {
+    env: {
+      GITHUB_REPO: repo,
+      GITHUB_OWNER: owner,
+      GITHUB_BRANCH: branch,
+      NOW_PREVIEW_ALIAS: alias
+    },
+    build: {
+      env: {
+        GITHUB_REPO: repo,
+        GITHUB_OWNER: owner,
+        GITHUB_BRANCH: branch,
+        NOW_PREVIEW_ALIAS: alias
+      }
+    }
+  }
+
+  return {
+    project,
+    user,
+    scope,
+    alias,
+    client,
+    deployment
+  }
+}
+
+async function fetchUser () {
+  // TODO: hit the zeit API and get the current username
+  return 'myobie'
+}
+
+// CONCATENATED MODULE: ./index.js
+
+
+
+
+(async () => {
+  try {
+    if (eventName !== 'push') {
+      exit('deploy-now only deploys to now for pushes')
+      return
+    }
+
+    const result = await deploy()
+
+    console.debug('deployment result', result)
+  } catch (error) {
+    exit(error.message)
+  }
+})()
+
+function exit (message) { core_default().setFailed(message) }
 
 
 /***/ }),
@@ -670,52 +978,6 @@ module.exports = {"name":"now-client","version":"6.0.1","main":"dist/index.js","
 
 /***/ }),
 
-/***/ 68:
-/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "githubToken", function() { return githubToken; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zeitToken", function() { return zeitToken; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "path", function() { return path; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "json", function() { return json; });
-const core = __webpack_require__(470)
-const { readFileSync } = __webpack_require__(747)
-
-const githubToken = core.getInput('github_token', { required: true })
-const zeitToken = core.getInput('zeit_token', { required: true })
-const prod = isTrue(core.getInput('prod'))
-const debug = isTrue(core.getInput('debug'))
-
-const path = process.cwd()
-
-const json = (() => {
-  let content
-
-  try {
-    content = readFileSync(path + '/now.json', 'utf8')
-  } catch (e) {
-    throw new Error('cannot find a now.json file, please refer to https://github.com/myobie/deploy-now#README')
-  }
-
-  const json = JSON.parse(content)
-
-  if (!json.name) {
-    throw new Error("missing key 'name' in now.json – please include the project name in now.json and retry")
-  }
-
-  return json
-})()
-
-function isTrue (thing) {
-  return thing === true || thing === 'true'
-}
-
-
-/***/ }),
-
 /***/ 73:
 /***/ (function(module) {
 
@@ -921,33 +1183,6 @@ function moveAcrossDevice (src, dest, overwrite) {
 }
 
 module.exports = moveSync
-
-
-/***/ }),
-
-/***/ 104:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
-
-const core = __webpack_require__(470)
-const { eventName } = __webpack_require__(684)
-const { deploy } = __webpack_require__(531)
-
-;(async () => {
-  try {
-    if (eventName !== 'push' && eventName !== 'pull_request') {
-      exit('deploy-now only deploys to now for pushes and pull_request synchronizes')
-      return
-    }
-
-    const result = await deploy()
-
-    console.debug('deployment result', result)
-  } catch (error) {
-    exit(error.message)
-  }
-})()
-
-function exit (message) { core.setFailed(message) }
 
 
 /***/ }),
@@ -10414,118 +10649,6 @@ module.exports = factory();
 
 /***/ }),
 
-/***/ 531:
-/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
-const { zeitToken: token, path, json, debug } = __webpack_require__(68)
-const { createDeployment } = __webpack_require__(477)
-// const { fetch } = require('now-client/utils')
-const gh = __webpack_require__(684)
-
-async function deploy () {
-  let deploymentResult
-  let deploymentURL
-  let error
-
-  const config = buildFullConfig()
-
-  const projectURL = `https://zeit.co/${config.scope}/${config.name}`
-  const actionURL = '#' // TODO: what is the url to this action's logs?
-
-  const deployment = await gh.createDeployment()
-  await deployment.update('pending')
-
-  for await (const event of createDeployment(config.client, config.deployment)) {
-    if (event.type === 'created') {
-      await deployment.update('queued')
-    }
-
-    if (event.type === 'build-state-changed') {
-      await deployment.update('in_progress')
-    }
-
-    if (event.type === 'ready') {
-      await deployment.update('success')
-      await gh.createComment(`🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.name}](${projectURL}) and is available at 🌍 <${config.alias}>. `.trim())
-      deploymentResult = event.payload
-    }
-
-    if (event.type === 'warning') {
-      console.error(event.payload)
-    }
-
-    if (event.type === 'error') {
-      await deployment.update('failure')
-      await gh.createComment(`
-❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.name}](${projectURL}).
-
-Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploymentURL}) over on now to see what might have happened.
-`.trim())
-
-      error = event.payload
-      console.error(event)
-      break
-    }
-  }
-
-  if (error) {
-    throw error
-  } else {
-    return deploymentResult
-  }
-}
-
-async function buildFullConfig () {
-  const project = json.name.replace('/', '-').replace('.', '')
-  const user = await fetchUser()
-  const scope = json.scope || user
-  const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
-
-  const client = {
-    force: true, // I really mean it
-    path,
-    token,
-    debug
-  }
-
-  const deployment = {
-    env: {
-      GITHUB_REPO: gh.repo,
-      GITHUB_OWNER: gh.owner,
-      GITHUB_BRANCH: gh.branch,
-      NOW_PREVIEW_ALIAS: alias
-    },
-    build: {
-      env: {
-        GITHUB_REPO: gh.repo,
-        GITHUB_OWNER: gh.owner,
-        GITHUB_BRANCH: gh.branch,
-        NOW_PREVIEW_ALIAS: alias
-      }
-    }
-  }
-
-  return {
-    project,
-    user,
-    scope,
-    alias,
-    client,
-    deployment
-  }
-}
-
-async function fetchUser () {
-  // TODO: hit the zeit API and get the current username
-  return 'myobie'
-}
-
-
-/***/ }),
-
 /***/ 536:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -13043,149 +13166,6 @@ exports.fromPromise = function (fn) {
     if (typeof cb !== 'function') return fn.apply(this, arguments)
     else fn.apply(this, arguments).then(r => cb(null, r), cb)
   }, 'name', { value: fn.name })
-}
-
-
-/***/ }),
-
-/***/ 684:
-/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "client", function() { return client; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eventName", function() { return eventName; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "owner", function() { return owner; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "repo", function() { return repo; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sha", function() { return sha; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "shortSHA", function() { return shortSHA; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createDeployment", function() { return createDeployment; });
-const github = __webpack_require__(469)
-const { githubToken: token, debug } = __webpack_require__(68)
-
-const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
-
-const octokitOptions = {}
-
-if (debug) {
-  octokitOptions.log = console
-}
-
-const octokit = new github.GitHub(token, octokitOptions)
-
-const client = octokit
-const eventName = github.context.eventName
-const owner = github.context.repo.owner
-const repo = github.context.repo.repo
-const sha = getSHA()
-const shortSHA = sha.substring(0, 8)
-const branch = getBranch()
-const environment = getDeploymentEnvironment()
-
-async function createComment (body) {
-  const prs = await associatedPullRequests()
-
-  if (prs.length === 0) {
-    createCommitComment(body)
-  } else {
-    prs.forEach(pr => {
-      // KNOWN ISSUE: this doesn't paginate, so will be limited to the "first page"
-      createPullRequestComment(pr.number, body)
-    })
-  }
-}
-
-async function associatedPullRequests () {
-  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
-    commit_sha: sha,
-    owner,
-    repo
-  })
-
-  return resp.data
-}
-
-async function createDeployment (previewAlias) {
-  const resp = await octokit.repos.createDeployment({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    required_contexts: [], // always deploy
-    ref: sha,
-    environment
-  })
-
-  const data = resp.data
-  const id = data.id
-
-  return {
-    data,
-    id,
-    update: async (state) => {
-      if (!validDeploymentStates.includes(state)) {
-        throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
-      }
-
-      const resp = await octokit.repos.createDeploymentStatus({
-        deployment_id: id,
-        environment_url: previewAlias,
-        owner,
-        repo,
-        state,
-        mediaType: {
-          previews: ['flash', 'ant-man']
-        }
-      })
-
-      // TODO: supply the log_url that points to the zeit dashboard page for the zeit deployment
-
-      return resp.data
-    }
-  }
-}
-
-function getSHA () { return github.context.payload.after }
-
-function getBranch () {
-  if (github.context.payload.pull_request) {
-    return github.context.payload.pull_request.head.ref
-  } else {
-    const ref = github.context.ref
-    // the first two segments are not the branch
-    return ref.split('/').slice(2).join('-').toLowerCase()
-  }
-}
-
-function getDeploymentEnvironment () {
-  if (getBranch() === 'master') {
-    return 'production'
-  } else {
-    return 'preview'
-  }
-}
-
-async function createCommitComment (body) {
-  const resp = await octokit.repos.createCommitComment({
-    commit_sha: sha,
-    owner,
-    repo,
-    body
-  })
-
-  return resp.data
-}
-
-async function createPullRequestComment (number, body) {
-  const resp = await octokit.issues.createComment({
-    issue_number: number,
-    owner,
-    repo,
-    body
-  })
-
-  return resp.data
 }
 
 
@@ -18213,6 +18193,37 @@ RetryOperation.prototype.mainError = function() {
 /******/ 			if(!hasOwnProperty.call(exports, name)) {
 /******/ 				Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	!function() {
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 			if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 			return ns;
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	!function() {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = function(module) {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				function getDefault() { return module['default']; } :
+/******/ 				function getModuleExports() { return module; };
+/******/ 			__webpack_require__.d(getter, 'a', getter);
+/******/ 			return getter;
 /******/ 		};
 /******/ 	}();
 /******/ 	

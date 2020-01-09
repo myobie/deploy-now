@@ -1,7 +1,7 @@
-const { zeitToken: token, path, json, debug } = require('./config')
-const { createDeployment } = require('now-client')
+import { createDeployment } from 'now-client'
+import { zeitToken as token, path, json, debug } from './config'
+import * as gh from './gh'
 // const { fetch } = require('now-client/utils')
-const gh = require('./gh')
 
 export async function deploy () {
   let deploymentResult

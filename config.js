@@ -1,5 +1,5 @@
-const core = require('@actions/core')
-const { readFileSync } = require('fs')
+import core from '@actions/core'
+import { readFileSync } from 'fs'
 
 export const githubToken = core.getInput('github_token', { required: true })
 export const zeitToken = core.getInput('zeit_token', { required: true })

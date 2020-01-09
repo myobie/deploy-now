@@ -1,11 +1,11 @@
-const core = require('@actions/core')
-const { eventName } = require('./gh')
-const { deploy } = require('./now')
+import core from '@actions/core'
+import { eventName } from './gh'
+import { deploy } from './now'
 
-;(async () => {
+(async () => {
   try {
-    if (eventName !== 'push' && eventName !== 'pull_request') {
-      exit('deploy-now only deploys to now for pushes and pull_request synchronizes')
+    if (eventName !== 'push') {
+      exit('deploy-now only deploys to now for pushes')
       return
     }
 
