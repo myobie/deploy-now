@@ -10428,7 +10428,7 @@ async function deploy () {
   const config = buildFullConfig()
 
   const deployment = await gh.createDeployment()
-    await deployment.update('pending')
+  await deployment.update('pending')
 
   for await (const event of createDeployment(config.client, config.deployment)) {
     if (event.type === 'created') {
@@ -13057,7 +13057,7 @@ const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pen
 
 const token = core.getInput('github_token', { required: true })
 
-const octokit = new github.GitHub(token)
+const octokit = new github.GitHub(token, { log: console })
 
 const client = octokit
 const eventName = github.context.eventName

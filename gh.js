@@ -5,7 +5,7 @@ const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pen
 
 export const token = core.getInput('github_token', { required: true })
 
-const octokit = new github.GitHub(token)
+const octokit = new github.GitHub(token, { log: console })
 
 export const client = octokit
 export const eventName = github.context.eventName
