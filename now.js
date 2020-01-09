@@ -1,6 +1,6 @@
 const { zeitToken: token, path, json, debug } = require('./config')
 const { createDeployment } = require('now-client')
-// const { fetch } = require('now-client/utils')
+const { fetch } = require('now-client/utils')
 const gh = require('./gh')
 
 exports.deploy = async function () {
@@ -101,6 +101,7 @@ async function buildFullConfig () {
 }
 
 async function fetchUser () {
-  // TODO: hit the zeit API and get the current username
-  return 'myobie'
+  const resp = await fetch('/www/user', token)
+  const json = await resp.json()
+  return json.user.username
 }

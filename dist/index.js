@@ -489,6 +489,14 @@ module.exports = {
 
 /***/ }),
 
+/***/ 45:
+/***/ (function() {
+
+eval("require")("now-client/utils");
+
+
+/***/ }),
+
 /***/ 47:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -10418,7 +10426,7 @@ module.exports = factory();
 
 const { zeitToken: token, path, json, debug } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
-// const { fetch } = require('now-client/utils')
+const { fetch } = __webpack_require__(45)
 const gh = __webpack_require__(684)
 
 exports.deploy = async function () {
@@ -10519,8 +10527,9 @@ async function buildFullConfig () {
 }
 
 async function fetchUser () {
-  // TODO: hit the zeit API and get the current username
-  return 'myobie'
+  const resp = await fetch('/www/user', token)
+  const json = await resp.json()
+  return json.user.username
 }
 
 
