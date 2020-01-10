@@ -1,6 +1,9 @@
 # GitHub Action which deploys to zeit's now on push
 
+## Quick start
+
 ```yml
+# for pushes, after checkout
 - name: now
   uses: myobie/deploy-now@master
   with:
@@ -10,11 +13,11 @@
 
 ## Automatically deploy every branch and PR to a preview alias
 
-<img width="756" alt="Screenshot of PR which has been deployed to a preview alias" src="https://user-images.githubusercontent.com/179/72175558-b4f50680-33dc-11ea-8ce9-0175790d7c4a.png">
+<img width="378" alt="Screenshot of PR which has been deployed to a preview alias" src="https://user-images.githubusercontent.com/179/72175558-b4f50680-33dc-11ea-8ce9-0175790d7c4a.png">
 
 ## Automatically deploy master to production
 
-<img width="1010" alt="Screen Shot 2020-01-10 at 19 03 56" src="https://user-images.githubusercontent.com/179/72175557-b45c7000-33dc-11ea-9541-7d8a4568381c.png">
+<img width="505" alt="Screenshot of a commit with a comment about being deployed" src="https://user-images.githubusercontent.com/179/72175557-b45c7000-33dc-11ea-9541-7d8a4568381c.png">
 
 ## Usage
 
