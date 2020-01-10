@@ -64,7 +64,7 @@ An example of how to use this with a static site generator (`hugo` for example) 
 ```sh
 if [[ -n "${NOW_PREVIEW_ALIAS}" ]]; then
   echo "Building for ${NOW_PREVIEW_ALIAS}"
-  hugo --baseURL="${NOW_PREVIEW_ALIAS}"
+  hugo --baseURL="https://${NOW_PREVIEW_ALIAS}"
 else
   echo "Building for default url"
   hugo
