@@ -13359,7 +13359,14 @@ async function createDeployment () {
   }
 }
 
-function getSHA () { return github.context.payload.after }
+function getSHA () {
+  if (debug) {
+    console.debug('before', github.context.payload.before)
+    console.debug('after', github.context.payload.after)
+    console.debug('head', github.context.payload.head)
+  }
+  return github.context.payload.after
+}
 
 function getBranch () {
   if (github.context.payload.pull_request) {
