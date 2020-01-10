@@ -18,7 +18,6 @@
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@actions/github": "^2.0.0",
-    "@zeit/fetch": "^5.2.0",
     "node-fetch": "^2.6.0",
     "now-client": "^6.0.1"
   },

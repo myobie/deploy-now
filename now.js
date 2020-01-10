@@ -1,7 +1,7 @@
 const { zeitToken: token, path, nowJSON: json, packageJSON, debug } = require('./config')
 const { createDeployment } = require('now-client')
 const gh = require('./gh')
-const zeitFetch = require('@zeit/fetch')(require('node-fetch'))
+const nodeFetch = require('node-fetch')
 
 export async function deploy () {
   let deploymentResult
@@ -129,7 +129,7 @@ async function fetch (url, opts = {}) {
 
   const time = Date.now()
 
-  const resp = await zeitFetch(url, opts)
+  const resp = await nodeFetch(url, opts)
 
   if (debug) {
     console.debug(`DONE in ${Date.now() - time}ms: ${opts.method || 'GET'} ${url}`)
