@@ -83,31 +83,7 @@ export async function createDeployment () {
 }
 
 function getSHA () {
-  if (debug) {
-    console.debug('before', github.context.payload.before)
-    console.debug('after', github.context.payload.after)
-    console.debug('commits', github.context.payload.commits)
-  }
-
-  const distinctCommit = github.context.payload.commits.sort((left, right) => {
-    // descending order of strings of ISO8601 date times
-    if (left.timestamp < right.timestamp) {
-      return 1
-    } else if (right.timestamp > left.timestamp) {
-      return -1
-    } else {
-      return 0
-    }
-  }).find(commit => { return commit.distinct })
-
-  if (distinctCommit) {
-    return distinctCommit.id
-  } else {
-    if (debug) {
-      console.debug('no distinct commits present in this push event')
-    }
-    return github.context.payload.after
-  }
+  return github.context.payload.after
 }
 
 function getBranch () {
