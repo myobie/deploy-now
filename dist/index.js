@@ -10669,7 +10669,7 @@ function getLogsURL (deployment, config) {
   const urlParts = deployment.url.split('-')
   const uuid = urlParts[urlParts.length - 1].split('.')[0]
 
-  return `https://zeit.co/${config.user}/${config.urlSafeProject}/${uuid}?tab=build`
+  return `https://zeit.co/${config.stagingPrefix}/${config.urlSafeProjectName}/${uuid}?tab=build`
 }
 
 async function fetch (url, opts = {}) {
