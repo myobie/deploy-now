@@ -10525,6 +10525,8 @@ async function deploy () {
 }
 
 async function assignAlais (deploymentID, alias) {
+  if (prod) { return { prod } }
+
   const resp = await fetch(`/v2/now/deployments/${deploymentID}/aliases`, {
     method: 'POST',
     contentType: 'application/json',
@@ -10559,21 +10561,30 @@ async function buildFullConfig () {
     debug
   }
 
+  let aliasAndURL
+
+  if (prod) {
+    aliasAndURL = {}
+  } else {
+    aliasAndURL = {
+      NOW_PREVIEW_ALIAS: alias,
+      NOW_PREVIEW_ALIAS_URL: aliasURL
+    }
+  }
+
   const deployment = {
     env: {
       GITHUB_REPO: gh.repo,
       GITHUB_OWNER: gh.owner,
       GITHUB_BRANCH: gh.branch,
-      NOW_PREVIEW_ALIAS: alias,
-      NOW_PREVIEW_ALIAS_URL: aliasURL
+      ...aliasAndURL
     },
     build: {
       env: {
         GITHUB_REPO: gh.repo,
         GITHUB_OWNER: gh.owner,
         GITHUB_BRANCH: gh.branch,
-        NOW_PREVIEW_ALIAS: alias,
-        NOW_PREVIEW_ALIAS_URL: aliasURL
+        ...aliasAndURL
       }
     }
   }
