@@ -5,7 +5,7 @@
 ```yml
 # for pushes, after checkout
 - name: now
-  uses: myobie/deploy-now@master
+  uses: myobie/deploy-now@v1
   with:
     zeit_token: ${{ secrets.ZEIT_TOKEN }}
     prod: ${{ github.ref == 'refs/heads/master' }}
