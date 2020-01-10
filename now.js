@@ -1,5 +1,5 @@
 const core = require('@actions/core')
-const { zeitToken: token, path, nowJSON: json, packageJSON, debug, skipComment } = require('./config')
+const { zeitToken: token, path, nowJSON: json, packageJSON, prod, debug, skipComment } = require('./config')
 const { createDeployment } = require('now-client')
 const gh = require('./gh')
 const nodeFetch = require('node-fetch')
@@ -119,6 +119,10 @@ async function buildFullConfig () {
         NOW_PREVIEW_ALIAS: alias
       }
     }
+  }
+
+  if (prod) {
+    deployment.target = 'production'
   }
 
   return {

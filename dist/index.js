@@ -10441,7 +10441,7 @@ module.exports = factory();
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
 const core = __webpack_require__(470)
-const { zeitToken: token, path, nowJSON: json, packageJSON, debug, skipComment } = __webpack_require__(68)
+const { zeitToken: token, path, nowJSON: json, packageJSON, prod, debug, skipComment } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
 const gh = __webpack_require__(684)
 const nodeFetch = __webpack_require__(454)
@@ -10561,6 +10561,10 @@ async function buildFullConfig () {
         NOW_PREVIEW_ALIAS: alias
       }
     }
+  }
+
+  if (prod) {
+    deployment.target = 'production'
   }
 
   return {
