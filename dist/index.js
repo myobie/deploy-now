@@ -13212,7 +13212,7 @@ async function associatedPullRequests () {
   return resp.data
 }
 
-async function createDeployment (previewAlias) {
+async function createDeployment () {
   const resp = await octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -13227,14 +13227,14 @@ async function createDeployment (previewAlias) {
   return {
     data,
     id,
-    update: async (state) => {
+    update: async (state, params) => {
       if (!validDeploymentStates.includes(state)) {
         throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
       }
 
       const resp = await octokit.repos.createDeploymentStatus({
+        ...params,
         deployment_id: id,
-        environment_url: previewAlias,
         owner,
         repo,
         state,
