@@ -10584,15 +10584,14 @@ async function buildFullConfig () {
   const alias = `${urlSafeProjectName}-git-${gh.branch}.${stagingPrefix}.now.sh`
   const aliasURL = `https://${alias}`
 
-  if (project.alias.length > 0) {
-    const _alias = project.alias.find(alias => {
-      return !alias.redirect && alias.target === 'PRODUCTION'
-    })
-    if (_alias) {
-      productionAlias = _alias.domain
-    }
+  const foundProductionAlias = project.alias.find(alias => {
+    return !alias.redirect && alias.target === 'PRODUCTION'
+  })
+
+  if (foundProductionAlias) {
+    productionAlias = foundProductionAlias.domain
   } else {
-    productionAliasURL = project.targets.production.alias[0]
+    productionAlias = project.targets.production.alias[0]
   }
 
   if (productionAlias) {
