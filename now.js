@@ -32,6 +32,8 @@ export async function deploy () {
     if (event.type === 'ready') {
       deployment = event.payload
 
+      await assignAlais(deployment.id, config.alias)
+
       await status.update('success', {
         log_url: logsURL,
         environment_url: config.alias
@@ -69,6 +71,14 @@ export async function deploy () {
   } else {
     return deployment
   }
+}
+
+async function assignAlais (deploymentID, alias) {
+  return fetch(`/v2/now/deployments/${deploymentID}`, {
+    method: 'POST',
+    contentType: 'application/json',
+    body: JSON.stringify({ alias })
+  })
 }
 
 async function buildFullConfig () {
