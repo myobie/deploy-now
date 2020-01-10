@@ -10504,10 +10504,11 @@ Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploy
 }
 
 async function buildFullConfig () {
-  const project = json.name.replace('/', '-').replace('.', '')
+  const project = json.name
+  const urlSafeProject = project.replace('/', '-').replace('.', '')
   const user = await fetchUser()
   const scope = json.scope || user
-  const alias = `https://${project}-git-${gh.branch}.${scope}.now.sh`
+  const alias = `https://${urlSafeProject}-git-${gh.branch}.${scope}.now.sh`
   const projectURL = `https://zeit.co/${scope}/${project}`
 
   const client = {
