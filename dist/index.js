@@ -36,6 +36,8 @@ require('./sourcemap-register.js');module.exports =
 /******/ 		// Load entry module and return exports
 /******/ 		return __webpack_require__(104);
 /******/ 	};
+/******/ 	// initialize runtime
+/******/ 	runtime(__webpack_require__);
 /******/
 /******/ 	// run startup
 /******/ 	return startup();
@@ -669,27 +671,27 @@ module.exports = {"name":"now-client","version":"6.0.1","main":"dist/index.js","
 /***/ }),
 
 /***/ 68:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "githubToken", function() { return githubToken; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zeitToken", function() { return zeitToken; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "path", function() { return path; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "json", function() { return json; });
 const core = __webpack_require__(470)
 const { readFileSync } = __webpack_require__(747)
 
 const githubToken = core.getInput('github_token', { required: true })
-exports.githubToken = githubToken
-
 const zeitToken = core.getInput('zeit_token', { required: true })
-exports.zeitToken = zeitToken
-
 const prod = isTrue(core.getInput('prod'))
-exports.prod = prod
-
 const debug = isTrue(core.getInput('debug'))
-exports.debug = debug
 
 const path = process.cwd()
-exports.path = path
 
-exports.json = (() => {
+const json = (() => {
   let content
 
   try {
@@ -10414,14 +10416,17 @@ module.exports = factory();
 /***/ }),
 
 /***/ 531:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
 const { zeitToken: token, path, json, debug } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
 const { fetch } = __webpack_require__(665)
 const gh = __webpack_require__(684)
 
-exports.deploy = async function () {
+async function deploy () {
   let deploymentResult
   let deploymentURL
   let error
@@ -13058,8 +13063,20 @@ exports.fromPromise = function (fn) {
 /***/ }),
 
 /***/ 684:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "client", function() { return client; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eventName", function() { return eventName; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "owner", function() { return owner; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "repo", function() { return repo; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sha", function() { return sha; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "shortSHA", function() { return shortSHA; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createDeployment", function() { return createDeployment; });
 const github = __webpack_require__(469)
 const { githubToken: token, debug } = __webpack_require__(68)
 
@@ -13074,30 +13091,15 @@ if (debug) {
 const octokit = new github.GitHub(token, octokitOptions)
 
 const client = octokit
-exports.client = client
-
 const eventName = github.context.eventName
-exports.eventName = eventName
-
 const owner = github.context.repo.owner
-exports.owner = owner
-
 const repo = github.context.repo.repo
-exports.repo = repo
-
 const sha = getSHA()
-exports.sha = sha
-
 const shortSHA = sha.substring(0, 8)
-exports.shortSHA = shortSHA
-
 const branch = getBranch()
-exports.branch = branch
-
 const environment = getDeploymentEnvironment()
-exports.environment = environment
 
-exports.createComment = async function (body) {
+async function createComment (body) {
   const prs = await associatedPullRequests()
 
   if (prs.length === 0) {
@@ -13110,7 +13112,17 @@ exports.createComment = async function (body) {
   }
 }
 
-exports.createDeployment = async function (previewAlias) {
+async function associatedPullRequests () {
+  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
+    commit_sha: sha,
+    owner,
+    repo
+  })
+
+  return resp.data
+}
+
+async function createDeployment (previewAlias) {
   const resp = await octokit.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -13166,16 +13178,6 @@ function getDeploymentEnvironment () {
   } else {
     return 'preview'
   }
-}
-
-async function associatedPullRequests () {
-  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
-    commit_sha: sha,
-    owner,
-    repo
-  })
-
-  return resp.data
 }
 
 async function createCommitComment (body) {
@@ -18202,5 +18204,32 @@ RetryOperation.prototype.mainError = function() {
 
 /***/ })
 
-/******/ });
+/******/ },
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ 	"use strict";
+/******/ 
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getter */
+/******/ 	!function() {
+/******/ 		// define getter function for harmony exports
+/******/ 		var hasOwnProperty = Object.prototype.hasOwnProperty;
+/******/ 		__webpack_require__.d = function(exports, name, getter) {
+/******/ 			if(!hasOwnProperty.call(exports, name)) {
+/******/ 				Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ }
+);
 //# sourceMappingURL=index.js.map
