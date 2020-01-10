@@ -10574,7 +10574,7 @@ async function buildFullConfig () {
   }
 
   const urlSafeProjectName = project.name.replace('/', '-').replace('.', '')
-  const projectURL = `https://zeit.co/${stagingPrefix}/${project}`
+  const projectURL = `https://zeit.co/${stagingPrefix}/${project.name}`
 
   const alias = `${urlSafeProjectName}-git-${gh.branch}.${stagingPrefix}.now.sh`
   const aliasURL = `https://${alias}`
