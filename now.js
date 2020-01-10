@@ -45,7 +45,7 @@ export async function deploy () {
 🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
 
-💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
+💡 Checkout the [action logs](${actionsURL}) or the [deployment logs](${logsURL}) over on now.
         `.trim())
       }
     }
@@ -63,7 +63,7 @@ export async function deploy () {
         await gh.createComment(`
 ❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
-➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
+➡️ Checkout the [action logs](${actionsURL}) or the [deployment logs](${logsURL}) over on now to see what might have happened.
         `.trim())
       }
 
