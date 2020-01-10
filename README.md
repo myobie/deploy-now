@@ -30,7 +30,7 @@ An example json file:
 An examle action workflow using this action:
 
 ```yml
-name: deploy now
+name: now
 on:
   push:
 
@@ -48,16 +48,17 @@ jobs:
           zeit_token: ${{ secrets.ZEIT_TOKEN }}
           prod: ${{ github.ref == 'refs/heads/master' }}
           debug: true
-          force: true
 ```
 
 _There is already a token set on the `github` context; you do not need to generate and set a token in your repository secrets._
 
+
+
 ### Preview Alias
 
-A preview alias URL is assigned to the deployment in the pattern `https://{}`
+A preview alias URL is assigned to the deployment in the pattern `https://{project}-git-{branch}.{user}.now.sh`
 
-The alias is exposed during the build and runtime steps as `NOW_PREVIEW_ALIAS`. For a full list of `ENV` variables, refer to the [deployment configuration in `now.js`](https://github.com/myobie/deploy-now/blob/master/now.js#L79)
+The alias is exposed during the build and runtime steps as `NOW_PREVIEW_ALIAS`. For a full list of `ENV` variables, refer to the [deployment configuration in `now.js`](https://github.com/myobie/deploy-now/blob/master/now.js#L99)
 
 An example of how to use this with a static site generator (`hugo` for example) is:
 
