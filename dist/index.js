@@ -13280,15 +13280,13 @@ const { githubToken: token, debug, prod } = __webpack_require__(68)
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
-const octokitOptions = {}
+const clientOptions = {}
 
 if (debug) {
-  octokitOptions.log = console
+  clientOptions.log = console
 }
 
-const octokit = new github.GitHub(token, octokitOptions)
-
-const client = octokit
+const client = new github.GitHub(token, clientOptions)
 const eventName = github.context.eventName
 const owner = github.context.repo.owner
 const repo = github.context.repo.repo
@@ -13312,17 +13310,21 @@ async function createComment (body) {
 }
 
 async function associatedPullRequests () {
-  const resp = await octokit.repos.listPullRequestsAssociatedWithCommit({
+  const resp = await client.repos.listPullRequestsAssociatedWithCommit({
     commit_sha: sha,
     owner,
     repo
   })
 
-  return resp.data
+  const openPRs = resp.data.filter(pr => {
+    return pr.state !== 'closed'
+  })
+
+  return openPRs
 }
 
 async function createDeployment () {
-  const resp = await octokit.repos.createDeployment({
+  const resp = await client.repos.createDeployment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     required_contexts: [], // always deploy
@@ -13341,7 +13343,7 @@ async function createDeployment () {
         throw new Error(`invalid github deployment state ${state}, must be one of ${validDeploymentStates.join(', ')}`)
       }
 
-      const resp = await octokit.repos.createDeploymentStatus({
+      const resp = await client.repos.createDeploymentStatus({
         ...params,
         deployment_id: id,
         owner,
@@ -13383,7 +13385,7 @@ function getDeploymentEnvironment () {
 }
 
 async function createCommitComment (body) {
-  const resp = await octokit.repos.createCommitComment({
+  const resp = await client.repos.createCommitComment({
     commit_sha: sha,
     owner,
     repo,
@@ -13394,7 +13396,7 @@ async function createCommitComment (body) {
 }
 
 async function createPullRequestComment (number, body) {
-  const resp = await octokit.issues.createComment({
+  const resp = await client.issues.createComment({
     issue_number: number,
     owner,
     repo,
