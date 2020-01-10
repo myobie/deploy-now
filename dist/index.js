@@ -10524,11 +10524,17 @@ async function deploy () {
 }
 
 async function assignAlais (deploymentID, alias) {
-  return fetch(`/v2/now/deployments/${deploymentID}/aliases`, {
+  const resp = await fetch(`/v2/now/deployments/${deploymentID}/aliases`, {
     method: 'POST',
     contentType: 'application/json',
     body: JSON.stringify({ alias })
   })
+
+  if (debug) {
+    console.debug('alias response', resp.status, await resp.json())
+  }
+
+  return resp
 }
 
 async function buildFullConfig () {
