@@ -3,7 +3,8 @@ description: deploy to zeit's now on push
 inputs:
   github_token:
     required: true
-    description: API token for GitHub (use ${{ github.token }})
+    description: API token for GitHub
+    default: ${{ github.token }}
   zeit_token:
     required: true
     description: API token for Zeit with access to this project
