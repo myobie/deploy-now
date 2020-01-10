@@ -44,13 +44,12 @@ jobs:
       - name: now
         uses: myobie/deploy-now@master
         with:
-          github_token: ${{ github.token }}
           zeit_token: ${{ secrets.ZEIT_TOKEN }}
           prod: ${{ github.ref == 'refs/heads/master' }}
           debug: true
 ```
 
-_There is already a token set on the `github` context; you do not need to generate and set a token in your repository secrets._
+_There is already a token set on the `github` context and this action uses it by default; you do not need to generate and set a token in your repository secrets._
 
 A comment is posted to PRs after a deploy to now and this can be disabled with `skip_comment: true`.
 
