@@ -18,6 +18,10 @@ export async function deploy () {
     environmentURL = config.aliasURL
   }
 
+  if (debug) {
+    console.debug('environment_url', environmentURL)
+  }
+
   const status = await gh.createDeployment()
   await status.update('pending')
 
