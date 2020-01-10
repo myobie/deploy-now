@@ -56,7 +56,7 @@ A comment is posted to PRs after a deploy to now and this can be disabled with `
 
 A preview alias URL is assigned to the deployment in the pattern `https://{project}-git-{branch}.{user}.now.sh`
 
-The alias is exposed during the build and runtime steps as `NOW_PREVIEW_ALIAS`. For a full list of `ENV` variables, refer to the [deployment configuration in `now.js`](https://github.com/myobie/deploy-now/blob/master/now.js#L99)
+The alias is exposed during the build and runtime steps as `NOW_PREVIEW_ALIAS`. For a full list of `ENV` variables, refer to the [deployment configuration in `now.js`](https://github.com/myobie/deploy-now/blob/master/now.js#L166)
 
 An example of how to use this with a static site generator (`hugo` for example) is:
 
