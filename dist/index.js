@@ -10552,6 +10552,7 @@ async function fetchUser () {
 }
 
 async function fetch (url, opts = {}) {
+  const fullURL = `https://api.zeit.co${url}`
   const userAgent = opts.userAgent || `deploy-now-action-${packageJSON.version}`
 
   opts.headers = {
@@ -10574,7 +10575,7 @@ async function fetch (url, opts = {}) {
 
   const time = Date.now()
 
-  const resp = await nodeFetch(url, opts)
+  const resp = await nodeFetch(fullURL, opts)
 
   if (debug) {
     console.debug(`DONE in ${Date.now() - time}ms: ${opts.method || 'GET'} ${url}`)
