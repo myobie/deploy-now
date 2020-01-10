@@ -1,6 +1,9 @@
 name: deploy now
 description: deploy to zeit's now on push
 inputs:
+  github_token:
+    required: true
+    description: API token for GitHub (use ${{ github.token }})
   zeit_token:
     required: true
     description: API token for Zeit with access to this project
@@ -8,10 +11,18 @@ inputs:
     required: false
     description: If true, then deploys the production site now
     default: false
+  skip_comment:
+    required: false
+    description: If true, then no comment will be posted to PRs or commits after a deploy
+    default: false
+  debug:
+    required: false
+    description: If true, then output debugging information
+    default: false
 outputs:
   deployment_url:
-    description: Deployment information on the Zeit dashboard
-  preview_url:
+    description: Deployment logs on the Zeit dashboard
+  preview_alias:
     description: Public URL to preview the deployed site
 runs:
   using: node12

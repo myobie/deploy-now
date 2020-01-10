@@ -5,6 +5,7 @@ export const githubToken = core.getInput('github_token', { required: true })
 export const zeitToken = core.getInput('zeit_token', { required: true })
 export const prod = isTrue(core.getInput('prod'))
 export const debug = isTrue(core.getInput('debug'))
+export const skipComment = isTrue(core.getInput('skip_comment'))
 
 export const path = process.cwd()
 

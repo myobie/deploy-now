@@ -52,7 +52,7 @@ jobs:
 
 _There is already a token set on the `github` context; you do not need to generate and set a token in your repository secrets._
 
-
+A comment is posted to PRs after a deploy to now and this can be disabled with `skip_comment: true`.
 
 ### Preview Alias
 

@@ -1,5 +1,4 @@
 const core = require('@actions/core')
-const { debug } = require('./config')
 const { eventName } = require('./gh')
 const { deploy } = require('./now')
 
@@ -10,11 +9,7 @@ const { deploy } = require('./now')
       return
     }
 
-    const result = await deploy()
-
-    if (debug) {
-      console.debug('deployment result', result)
-    }
+    await deploy()
   } catch (error) {
     console.error(error.stack)
     exit(error.message)

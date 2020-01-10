@@ -679,6 +679,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "zeitToken", function() { return zeitToken; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "prod", function() { return prod; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debug", function() { return debug; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "skipComment", function() { return skipComment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "path", function() { return path; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "packageJSON", function() { return packageJSON; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nowJSON", function() { return nowJSON; });
@@ -689,6 +690,7 @@ const githubToken = core.getInput('github_token', { required: true })
 const zeitToken = core.getInput('zeit_token', { required: true })
 const prod = isTrue(core.getInput('prod'))
 const debug = isTrue(core.getInput('debug'))
+const skipComment = isTrue(core.getInput('skip_comment'))
 
 const path = process.cwd()
 
@@ -948,7 +950,6 @@ module.exports = moveSync
 /***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
 const core = __webpack_require__(470)
-const { debug } = __webpack_require__(68)
 const { eventName } = __webpack_require__(684)
 const { deploy } = __webpack_require__(531)
 
@@ -959,11 +960,7 @@ const { deploy } = __webpack_require__(531)
       return
     }
 
-    const result = await deploy()
-
-    if (debug) {
-      console.debug('deployment result', result)
-    }
+    await deploy()
   } catch (error) {
     console.error(error.stack)
     exit(error.message)
@@ -10443,7 +10440,8 @@ module.exports = factory();
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deploy", function() { return deploy; });
-const { zeitToken: token, path, nowJSON: json, packageJSON, debug } = __webpack_require__(68)
+const core = __webpack_require__(470)
+const { zeitToken: token, path, nowJSON: json, packageJSON, debug, skipComment } = __webpack_require__(68)
 const { createDeployment } = __webpack_require__(477)
 const gh = __webpack_require__(684)
 const nodeFetch = __webpack_require__(454)
@@ -10483,12 +10481,15 @@ async function deploy () {
         log_url: logsURL,
         environment_url: config.alias
       })
-      await gh.createComment(`
+
+      if (!skipComment) {
+        await gh.createComment(`
 🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
 
 💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
-`.trim())
+        `.trim())
+      }
     }
 
     if (event.type === 'warning') {
@@ -10499,11 +10500,14 @@ async function deploy () {
       await status.update('failure', {
         log_url: logsURL
       })
-      await gh.createComment(`
+
+      if (!skipComment) {
+        await gh.createComment(`
 ❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
 ➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
-`.trim())
+        `.trim())
+      }
 
       error = event.payload
       console.error(event)
@@ -10514,7 +10518,8 @@ async function deploy () {
   if (error) {
     throw error
   } else {
-    return deployment
+    core.setOutput('deployment_url', logsURL)
+    core.setOutput('preview_alias', config.alias)
   }
 }
 

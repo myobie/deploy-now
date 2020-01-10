@@ -1,4 +1,5 @@
-const { zeitToken: token, path, nowJSON: json, packageJSON, debug } = require('./config')
+const core = require('@actions/core')
+const { zeitToken: token, path, nowJSON: json, packageJSON, debug, skipComment } = require('./config')
 const { createDeployment } = require('now-client')
 const gh = require('./gh')
 const nodeFetch = require('node-fetch')
@@ -38,12 +39,15 @@ export async function deploy () {
         log_url: logsURL,
         environment_url: config.alias
       })
-      await gh.createComment(`
+
+      if (!skipComment) {
+        await gh.createComment(`
 🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
 
 💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
-`.trim())
+        `.trim())
+      }
     }
 
     if (event.type === 'warning') {
@@ -54,11 +58,14 @@ export async function deploy () {
       await status.update('failure', {
         log_url: logsURL
       })
-      await gh.createComment(`
+
+      if (!skipComment) {
+        await gh.createComment(`
 ❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
 ➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
-`.trim())
+        `.trim())
+      }
 
       error = event.payload
       console.error(event)
@@ -69,7 +76,8 @@ export async function deploy () {
   if (error) {
     throw error
   } else {
-    return deployment
+    core.setOutput('deployment_url', logsURL)
+    core.setOutput('preview_alias', config.alias)
   }
 }
 
