@@ -10449,33 +10449,44 @@ const gh = __webpack_require__(684)
 const nodeFetch = __webpack_require__(454)
 
 async function deploy () {
-  let deploymentResult
-  let deploymentURL
+  let deployment
+  let logsURL
   let error
-
   const config = await buildFullConfig()
+  const actionsURL = `https://github.com/${gh.owner}/${gh.repo}/actions`
 
-  const actionURL = '#' // TODO: what is the url to this action's logs?
-
-  const deployment = await gh.createDeployment()
-  await deployment.update('pending')
+  const status = await gh.createDeployment()
+  await status.update('pending')
 
   for await (const event of createDeployment(config.client, config.deployment)) {
     if (event.type === 'created') {
-      await deployment.update('queued')
+      deployment = event.payload
+      logsURL = getLogsURL(deployment, config)
+
+      await status.update('queued', {
+        log_url: logsURL
+      })
     }
 
     if (event.type === 'build-state-changed') {
-      await deployment.update('in_progress')
+      await status.update('in_progress', {
+        log_url: logsURL
+      })
     }
 
     if (event.type === 'ready') {
-      await deployment.update('success')
+      deployment = event.payload
+
+      await status.update('success', {
+        log_url: logsURL,
+        environment_url: config.alias
+      })
       await gh.createComment(`
 🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
+
+💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
 `.trim())
-      deploymentResult = event.payload
     }
 
     if (event.type === 'warning') {
@@ -10483,11 +10494,13 @@ async function deploy () {
     }
 
     if (event.type === 'error') {
-      await deployment.update('failure')
+      await status.update('failure', {
+        log_url: logsURL
+      })
       await gh.createComment(`
 ❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
-Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploymentURL}) over on now to see what might have happened.
+➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
 `.trim())
 
       error = event.payload
@@ -10499,7 +10512,7 @@ Checkout the [action logs](${actionURL}) here and the [deployment logs](${deploy
   if (error) {
     throw error
   } else {
-    return deploymentResult
+    return deployment
   }
 }
 
@@ -10537,6 +10550,7 @@ async function buildFullConfig () {
 
   return {
     project,
+    urlSafeProject,
     projectURL,
     user,
     scope,
@@ -10550,6 +10564,13 @@ async function fetchUser () {
   const resp = await fetch('/www/user')
   const json = await resp.json()
   return json.user.username
+}
+
+function getLogsURL (deployment, config) {
+  const urlParts = deployment.url.split('-')
+  const uuid = urlParts[urlParts.length - 1].split('.')[0]
+
+  return `https://zeit.co/${config.user}/${config.urlSafeProject}/${uuid}?tab=build`
 }
 
 async function fetch (url, opts = {}) {
