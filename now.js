@@ -82,7 +82,7 @@ export async function deploy () {
 }
 
 async function assignAlais (deploymentID, alias) {
-  return fetch(`/v2/now/deployments/${deploymentID}`, {
+  return fetch(`/v2/now/deployments/${deploymentID}/aliases`, {
     method: 'POST',
     contentType: 'application/json',
     body: JSON.stringify({ alias })
