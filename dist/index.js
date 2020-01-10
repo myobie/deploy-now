@@ -10453,6 +10453,13 @@ async function deploy () {
   const config = await buildFullConfig()
   const actionsURL = `https://github.com/${gh.owner}/${gh.repo}/actions`
 
+  let environmentURL
+  if (prod) {
+    environmentURL = config.productionAliasURL
+  } else {
+    environmentURL = config.aliasURL
+  }
+
   const status = await gh.createDeployment()
   await status.update('pending')
 
@@ -10479,13 +10486,13 @@ async function deploy () {
 
       await status.update('success', {
         log_url: logsURL,
-        environment_url: config.aliasURL
+        environment_url: environmentURL
       })
 
       if (!skipComment) {
         await gh.createComment(`
-🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
-🌍 <${config.aliasURL}>.
+🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project.name}](${config.projectURL}) and is available now at
+🌍 <${environmentURL}>.
 
 💡 Checkout the [action logs](${actionsURL}) or the [deployment logs](${logsURL}) over on now.
         `.trim())
@@ -10503,7 +10510,7 @@ async function deploy () {
 
       if (!skipComment) {
         await gh.createComment(`
-❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
+❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project.name}](${config.projectURL}).
 
 ➡️ Checkout the [action logs](${actionsURL}) or the [deployment logs](${logsURL}) over on now to see what might have happened.
         `.trim())
@@ -10519,8 +10526,11 @@ async function deploy () {
     throw error
   } else {
     core.setOutput('deployment_url', logsURL)
-    core.setOutput('preview_alias', config.alias)
-    core.setOutput('preview_alias_url', config.aliasURL)
+
+    if (!prod) {
+      core.setOutput('preview_alias', config.alias)
+      core.setOutput('preview_alias_url', config.aliasURL)
+    }
   }
 }
 
@@ -10533,26 +10543,49 @@ async function assignAlais (deploymentID, alias) {
     body: JSON.stringify({ alias })
   })
 
+  await checkStatus(resp)
+
   if (debug) {
     console.debug('alias response', resp.status, await resp.json())
-  }
-
-  if (resp.status !== 200) {
-    const content = resp.json()
-    throw new Error(`${content.code}: ${content.error.message}`)
   }
 
   return resp
 }
 
 async function buildFullConfig () {
-  const project = json.name
-  const urlSafeProject = project.replace('/', '-').replace('.', '')
+  let stagingPrefix
+  let team
+  let project
+  let productionAliasURL
+
   const user = await fetchUser()
-  const scope = json.scope || user
-  const alias = `${urlSafeProject}-git-${gh.branch}.${scope}.now.sh`
+
+  if (json.scope) {
+    team = await fetchTeam(json.scope)
+    stagingPrefix = team.stagingPrefix
+  } else {
+    stagingPrefix = user.stagingPrefix
+  }
+
+  if (team) {
+    project = await fetchProject(json.name, team.id)
+  } else {
+    project = await fetchProject(json.name)
+  }
+
+  const urlSafeProjectName = project.name.replace('/', '-').replace('.', '')
+  const projectURL = `https://zeit.co/${stagingPrefix}/${project}`
+
+  const alias = `${urlSafeProjectName}-git-${gh.branch}.${stagingPrefix}.now.sh`
   const aliasURL = `https://${alias}`
-  const projectURL = `https://zeit.co/${scope}/${project}`
+
+  if (project.alias.length > 0) {
+    productionAliasURL = project.alias.find(alias => {
+      return !alias.redirect && alias.target === 'PRODUCTION'
+    })
+  } else {
+    productionAliasURL = project.targets.production.alias[0]
+  }
 
   const client = {
     force: true, // I really mean it
@@ -10595,12 +10628,13 @@ async function buildFullConfig () {
 
   return {
     project,
-    urlSafeProject,
+    urlSafeProjectName,
     projectURL,
     user,
-    scope,
+    stagingPrefix,
     alias,
     aliasURL,
+    productionAliasURL,
     client,
     deployment
   }
@@ -10608,8 +10642,27 @@ async function buildFullConfig () {
 
 async function fetchUser () {
   const resp = await fetch('/www/user')
+  await checkStatus(resp)
   const json = await resp.json()
-  return json.user.username
+  return json.user
+}
+
+async function fetchTeam (slug) {
+  const resp = await fetch(`/v1/teams?slug=${slug}`)
+  await checkStatus(resp)
+  return resp.json()
+}
+
+async function fetchProject (name, teamId) {
+  let url = `/v1/projects/${name}`
+
+  if (teamId) {
+    url = url + `?teamId=${teamId}`
+  }
+
+  const resp = await fetch(url)
+  await checkStatus(resp)
+  return resp.json()
 }
 
 function getLogsURL (deployment, config) {
@@ -10638,7 +10691,7 @@ async function fetch (url, opts = {}) {
   opts.method || (opts.method = 'GET')
 
   if (debug) {
-    console.debug(`FETCH: ${opts.method} ${url}`)
+    console.debug(`${opts.method} ${url}`)
   }
 
   const time = Date.now()
@@ -10646,10 +10699,28 @@ async function fetch (url, opts = {}) {
   const resp = await nodeFetch(fullURL, opts)
 
   if (debug) {
-    console.debug(`DONE in ${Date.now() - time}ms: ${opts.method || 'GET'} ${url}`)
+    console.debug(`${resp.status} in ${Date.now() - time}ms → ${opts.method || 'GET'} ${url}`)
   }
 
   return resp
+}
+
+async function checkStatus (resp) {
+  if (resp.ok) {
+    return resp
+  } else {
+    let error
+    try {
+      const json = resp.json()
+      error = json.error
+    } catch (err) {
+      error = null
+    }
+
+    error || (error = resp.statusText)
+
+    throw new Error(error)
+  }
 }
 
 
