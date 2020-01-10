@@ -13364,6 +13364,7 @@ function getSHA () {
     console.debug('before', github.context.payload.before)
     console.debug('after', github.context.payload.after)
     console.debug('head', github.context.payload.head)
+    console.debug('commits', github.context.payload.commits)
   }
   return github.context.payload.after
 }
@@ -13375,6 +13376,7 @@ function getBranch () {
     const ref = github.context.ref
     // the first two segments are not the branch
     return ref.split('/').slice(2).join('-').toLowerCase()
+    // TODO: don't replace the / with a - and lowercase here, do that over to make it URL safe where it's needed
   }
 }
 
