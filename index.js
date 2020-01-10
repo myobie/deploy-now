@@ -1,17 +1,20 @@
 const core = require('@actions/core')
+const { debug } = require('./config')
 const { eventName } = require('./gh')
 const { deploy } = require('./now')
 
 ;(async () => {
   try {
-    if (eventName !== 'push' && eventName !== 'pull_request') {
-      exit('deploy-now only deploys to now for pushes and pull_request synchronizes')
+    if (eventName !== 'push') {
+      exit('deploy-now only deploys to now for pushes')
       return
     }
 
     const result = await deploy()
 
-    console.debug('deployment result', result)
+    if (debug) {
+      console.debug('deployment result', result)
+    }
   } catch (error) {
     console.error(error.stack)
     exit(error.message)

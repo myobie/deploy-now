@@ -8,7 +8,25 @@ export const debug = isTrue(core.getInput('debug'))
 
 export const path = process.cwd()
 
-export const json = (() => {
+export const packageJSON = (() => {
+  let content
+
+  try {
+    content = readFileSync(path + '/package.json', 'utf8')
+  } catch (e) {
+    throw new Error('cannot find a package.json file')
+  }
+
+  const json = JSON.parse(content)
+
+  if (!json.version) {
+    throw new Error("missing key 'version' in package.json")
+  }
+
+  return json
+})()
+
+export const nowJSON = (() => {
   let content
 
   try {

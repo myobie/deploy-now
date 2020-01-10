@@ -1,7 +1,7 @@
-const { zeitToken: token, path, json, debug } = require('./config')
+const { zeitToken: token, path, nowJSON: json, packageJSON, debug } = require('./config')
 const { createDeployment } = require('now-client')
-const { fetch } = require('./node_modules/now-client/utils')
 const gh = require('./gh')
+const zeitFetch = require('@zeit/fetch')(require('node-fetch'))
 
 export async function deploy () {
   let deploymentResult
@@ -101,7 +101,39 @@ async function buildFullConfig () {
 }
 
 async function fetchUser () {
-  const resp = await fetch('/www/user', token)
+  const resp = await fetch('/www/user')
   const json = await resp.json()
   return json.user.username
+}
+
+async function fetch (url, opts = {}) {
+  const userAgent = opts.userAgent || `deploy-now-action-${packageJSON.version}`
+
+  opts.headers = {
+    ...opts.headers,
+    authorization: `Bearer ${token}`,
+    accept: 'application/json',
+    'user-agent': userAgent
+  }
+
+  if (opts.contentType) {
+    opts.headers['Content-type'] = opts.contentType
+  }
+  delete opts.contentType
+
+  opts.method || (opts.method = 'GET')
+
+  if (debug) {
+    console.debug(`FETCH: ${opts.method} ${url}`)
+  }
+
+  const time = Date.now()
+
+  const resp = await zeitFetch(url, opts)
+
+  if (debug) {
+    console.debug(`DONE in ${Date.now() - time}ms: ${opts.method || 'GET'} ${url}`)
+  }
+
+  return resp
 }
