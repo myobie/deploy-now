@@ -10560,6 +10560,7 @@ async function buildFullConfig () {
   let stagingPrefix
   let team
   let project
+  let productionAlias
   let productionAliasURL
 
   const user = await fetchUser()
@@ -10584,15 +10585,18 @@ async function buildFullConfig () {
   const aliasURL = `https://${alias}`
 
   if (project.alias.length > 0) {
-    productionAliasURL = project.alias.find(alias => {
+    const _alias = project.alias.find(alias => {
       return !alias.redirect && alias.target === 'PRODUCTION'
     })
+    if (_alias) {
+      productionAlias = _alias.domain
+    }
   } else {
     productionAliasURL = project.targets.production.alias[0]
   }
 
-  if (productionAliasURL) {
-    productionAliasURL = 'https://' + productionAliasURL
+  if (productionAlias) {
+    productionAliasURL = 'https://' + productionAlias
   }
 
   const client = {
