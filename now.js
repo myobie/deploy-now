@@ -93,6 +93,11 @@ async function assignAlais (deploymentID, alias) {
     console.debug('alias response', resp.status, await resp.json())
   }
 
+  if (resp.status !== 200) {
+    const content = resp.json()
+    throw new Error(`${content.code}: ${content.error.message}`)
+  }
+
   return resp
 }
 
