@@ -10479,13 +10479,13 @@ async function deploy () {
 
       await status.update('success', {
         log_url: logsURL,
-        environment_url: config.alias
+        environment_url: config.aliasURL
       })
 
       if (!skipComment) {
         await gh.createComment(`
 🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
-🌍 <${config.alias}>.
+🌍 <${config.aliasURL}>.
 
 💡 Checkout the [action logs](${actionsURL}) or the [deployment logs](${logsURL}) over on now.
         `.trim())
@@ -10520,6 +10520,7 @@ async function deploy () {
   } else {
     core.setOutput('deployment_url', logsURL)
     core.setOutput('preview_alias', config.alias)
+    core.setOutput('preview_alias_url', config.aliasURL)
   }
 }
 
@@ -10542,7 +10543,8 @@ async function buildFullConfig () {
   const urlSafeProject = project.replace('/', '-').replace('.', '')
   const user = await fetchUser()
   const scope = json.scope || user
-  const alias = `https://${urlSafeProject}-git-${gh.branch}.${scope}.now.sh`
+  const alias = `${urlSafeProject}-git-${gh.branch}.${scope}.now.sh`
+  const aliasURL = `https://${alias}`
   const projectURL = `https://zeit.co/${scope}/${project}`
 
   const client = {
@@ -10557,14 +10559,16 @@ async function buildFullConfig () {
       GITHUB_REPO: gh.repo,
       GITHUB_OWNER: gh.owner,
       GITHUB_BRANCH: gh.branch,
-      NOW_PREVIEW_ALIAS: alias
+      NOW_PREVIEW_ALIAS: alias,
+      NOW_PREVIEW_ALIAS_URL: aliasURL
     },
     build: {
       env: {
         GITHUB_REPO: gh.repo,
         GITHUB_OWNER: gh.owner,
         GITHUB_BRANCH: gh.branch,
-        NOW_PREVIEW_ALIAS: alias
+        NOW_PREVIEW_ALIAS: alias,
+        NOW_PREVIEW_ALIAS_URL: aliasURL
       }
     }
   }
@@ -10580,6 +10584,7 @@ async function buildFullConfig () {
     user,
     scope,
     alias,
+    aliasURL,
     client,
     deployment
   }

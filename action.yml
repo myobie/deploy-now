@@ -24,7 +24,9 @@ outputs:
   deployment_url:
     description: Deployment logs on the Zeit dashboard
   preview_alias:
-    description: Public URL to preview the deployed site
+    description: Public alias to preview the deployed site
+  preview_alias_url:
+    description: Same as above with https://
 runs:
   using: node12
   main: dist/index.js
