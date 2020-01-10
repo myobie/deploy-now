@@ -39,7 +39,7 @@ export async function deploy () {
         environment_url: config.alias
       })
       await gh.createComment(`
-🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
+🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
 
 💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
@@ -55,7 +55,7 @@ export async function deploy () {
         log_url: logsURL
       })
       await gh.createComment(`
-❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.project}](${config.projectURL}).
+❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
 ➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
 `.trim())

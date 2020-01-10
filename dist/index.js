@@ -10484,7 +10484,7 @@ async function deploy () {
         environment_url: config.alias
       })
       await gh.createComment(`
-🎈 \`${gh.shortSHA}\` was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
+🎈 [\`${gh.shortSHA}\`](${gh.commitURL}) was deployed to now for the project [${config.project}](${config.projectURL}) and is available now at
 🌍 <${config.alias}>.
 
 💡 Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now.
@@ -10500,7 +10500,7 @@ async function deploy () {
         log_url: logsURL
       })
       await gh.createComment(`
-❌ \`${gh.shortSHA}\` failed to deploy to now for the project [${config.project}](${config.projectURL}).
+❌ [\`${gh.shortSHA}\`](${gh.commitURL}) failed to deploy to now for the project [${config.project}](${config.projectURL}).
 
 ➡️ Checkout the [action logs](${actionsURL}) here and the [deployment logs](${logsURL}) over on now to see what might have happened.
 `.trim())
@@ -13152,6 +13152,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "repo", function() { return repo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sha", function() { return sha; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "shortSHA", function() { return shortSHA; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "commitURL", function() { return commitURL; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "environment", function() { return environment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
@@ -13175,6 +13176,7 @@ const owner = github.context.repo.owner
 const repo = github.context.repo.repo
 const sha = getSHA()
 const shortSHA = sha.substring(0, 8)
+const commitURL = `https://github.com/${owner}/${repo}/commit/${sha}`
 const branch = getBranch()
 const environment = getDeploymentEnvironment()
 

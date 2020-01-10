@@ -17,6 +17,7 @@ export const owner = github.context.repo.owner
 export const repo = github.context.repo.repo
 export const sha = getSHA()
 export const shortSHA = sha.substring(0, 8)
+export const commitURL = `https://github.com/${owner}/${repo}/commit/${sha}`
 export const branch = getBranch()
 export const environment = getDeploymentEnvironment()
 
