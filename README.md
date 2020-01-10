@@ -46,12 +46,11 @@ jobs:
         with:
           zeit_token: ${{ secrets.ZEIT_TOKEN }}
           prod: ${{ github.ref == 'refs/heads/master' }}
-          debug: true
 ```
 
 _There is already a token set on the `github` context and this action uses it by default; you do not need to generate and set a token in your repository secrets._
 
-A comment is posted to PRs after a deploy to now and this can be disabled with `skip_comment: true`.
+A comment is posted to PRs after a deploy to now and this can be disabled with `skip_comment: true`. To output more debugging information to the logs, add `debug: true`.
 
 ### Preview Alias
 
