@@ -145,6 +145,10 @@ async function buildFullConfig () {
     productionAliasURL = project.targets.production.alias[0]
   }
 
+  if (productionAliasURL) {
+    productionAliasURL = 'https://' + productionAliasURL
+  }
+
   const client = {
     force: true, // I really mean it
     path,
