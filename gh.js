@@ -1,5 +1,5 @@
 const github = require('@actions/github')
-const { githubToken: token, debug } = require('./config')
+const { githubToken: token, debug, prod } = require('./config')
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
@@ -122,7 +122,7 @@ function getBranch () {
 }
 
 function getDeploymentEnvironment () {
-  if (getBranch() === 'master') {
+  if (prod) {
     return 'production'
   } else {
     return 'preview'

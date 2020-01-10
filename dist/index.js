@@ -13276,7 +13276,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createComment", function() { return createComment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createDeployment", function() { return createDeployment; });
 const github = __webpack_require__(469)
-const { githubToken: token, debug } = __webpack_require__(68)
+const { githubToken: token, debug, prod } = __webpack_require__(68)
 
 const validDeploymentStates = ['error', 'failure', 'in_progress', 'queued', 'pending', 'success']
 
@@ -13399,7 +13399,7 @@ function getBranch () {
 }
 
 function getDeploymentEnvironment () {
-  if (getBranch() === 'master') {
+  if (prod) {
     return 'production'
   } else {
     return 'preview'
