@@ -44,7 +44,7 @@ export async function deploy () {
     if (event.type === 'ready') {
       deployment = event.payload
 
-      await assignAlais(deployment.id, config.client)
+      await assignAlais(deployment.id, config.alias, config.client.teamId)
 
       await status.update('success', {
         log_url: logsURL,
@@ -96,13 +96,13 @@ export async function deploy () {
   }
 }
 
-async function assignAlais (deploymentID, { alias, teamId }) {
+async function assignAlais (deploymentID, alias, teamID) {
   if (prod) { return { prod } }
 
   let url = `/v2/now/deployments/${deploymentID}/aliases`
 
-  if (teamId) {
-    url = url + `?teamId=${teamId}`
+  if (teamID) {
+    url = url + `?teamId=${teamID}`
   }
 
   const resp = await fetch(url, {
