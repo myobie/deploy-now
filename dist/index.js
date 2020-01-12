@@ -10547,11 +10547,11 @@ async function assignAlais (deploymentID, alias) {
     body: JSON.stringify({ alias })
   })
 
-  await checkStatus(resp)
-
   if (debug) {
     console.debug('alias response', resp.status, await resp.json())
   }
+
+  await checkStatus(resp)
 
   return resp
 }
