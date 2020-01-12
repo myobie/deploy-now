@@ -25,7 +25,7 @@ export async function deploy () {
   const status = await gh.createDeployment()
   await status.update('pending')
 
-  for await (const event of createDeployment(config.client, config.deployment)) {
+  for await (const event of createDeployment(config.client, config.deployment, json)) {
     if (event.type === 'created') {
       deployment = event.payload
       logsURL = getLogsURL(deployment, config)
