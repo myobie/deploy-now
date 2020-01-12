@@ -10486,7 +10486,7 @@ async function deploy () {
     if (event.type === 'ready') {
       deployment = event.payload
 
-      await assignAlais(deployment.id, config.alias)
+      await assignAlais(deployment.id, config.alias, config.team ? config.team.id : null)
 
       await status.update('success', {
         log_url: logsURL,
@@ -10538,10 +10538,16 @@ async function deploy () {
   }
 }
 
-async function assignAlais (deploymentID, alias) {
+async function assignAlais (deploymentID, alias, teamID) {
   if (prod) { return { prod } }
 
-  const resp = await fetch(`/v2/now/deployments/${deploymentID}/aliases`, {
+  let url = `/v2/now/deployments/${deploymentID}/aliases`
+
+  if (teamID) {
+    url = url + `?teamId=${teamID}`
+  }
+
+  const resp = await fetch(url, {
     method: 'POST',
     contentType: 'application/json',
     body: JSON.stringify({ alias })
@@ -10642,6 +10648,7 @@ async function buildFullConfig () {
     urlSafeProjectName,
     projectURL,
     user,
+    team,
     stagingPrefix,
     alias,
     aliasURL,
