@@ -1,6 +1,6 @@
 # GitHub Action which deploys to zeit's now on push
 
-## Quick start
+## Quickstart
 
 ```yml
 # for pushes, after checkout
@@ -46,7 +46,7 @@ An example json file:
 
 ### `now.yml` in `.github/workflows/`
 
-An examle action workflow using this action:
+An example action workflow using this action:
 
 ```yml
 name: now
@@ -88,6 +88,12 @@ else
   hugo
 fi
 ```
+
+## Why use this instead of the built in GitHub integration?
+
+`now` is very smart and will not redeploy if the source hasn't changed. However, it's possible to have build-time ENV variables that change and affect the output (like the `NOW_PREVIEW_ALIAS`) which need to force a deploy. Not every URL can be rendered without the host, like an RSS feed or a txt template that might be used for sending emails, so it's important to rebuild with the latest ENV.
+
+It's also super cool and flexible to be able to control when things are deployed inside the source of the repo.
 
 ## Development
 
